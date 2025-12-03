@@ -8,7 +8,7 @@
                     <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path d="M12 2L4 7v9c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-8-5zm0 2.18l6 3.75v7.07c0 4.45-2.93 8.6-6 9.8-3.07-1.2-6-5.35-6-9.8V7.93l6-3.75z"/>
                     </svg>
-                    <span><?php bloginfo('name'); ?></span>
+                    <span>Green Burials</span>
                 </div>
                 <h3>Resources</h3>
                 <ul>
@@ -25,10 +25,10 @@
                     <?php if (function_exists('wc_get_page_permalink')): ?>
                         <li><a href="<?php echo esc_url(wc_get_page_permalink('shop')); ?>">All Products</a></li>
                     <?php endif; ?>
-                    <li><a href="<?php echo esc_url(home_url('/product-category/urns')); ?>">Urns</a></li>
-                    <li><a href="<?php echo esc_url(home_url('/product-category/caskets')); ?>">Caskets</a></li>
+                    <li><a href="<?php echo esc_url(home_url('/product-category/water-cremation-urns')); ?>">Water Cremation Urns</a></li>
+                    <li><a href="<?php echo esc_url(home_url('/product-category/earth-burial-urns')); ?>">Earth Burial Urns</a></li>
+                    <li><a href="<?php echo esc_url(home_url('/product-category/biodegradable-caskets')); ?>">Biodegradable Caskets</a></li>
                     <li><a href="<?php echo esc_url(home_url('/product-category/burial-shrouds')); ?>">Burial Shrouds</a></li>
-                    <li><a href="<?php echo esc_url(home_url('/product-category/memorial-products')); ?>">Memorial Products</a></li>
                 </ul>
             </div>
             
@@ -70,7 +70,7 @@
         </div>
         
         <div class="footer-bottom">
-            <p>&copy; <?php echo date('Y'); ?> <?php bloginfo('name'); ?>. All rights reserved. | Biodegradable Urns, Caskets, Coffins & Burial Shrouds</p>
+            <p>&copy; <?php echo date('Y'); ?> Green Burials. All rights reserved. | Biodegradable Urns, Caskets, Coffins & Burial Shrouds</p>
         </div>
     </div>
 </footer>

@@ -13,14 +13,15 @@ get_header();
         <div class="hero-content">
             <div class="hero-text">
                 <h1>GREEN BURIALS</h1>
-                <p class="subtitle">Biodegradable Urns, Caskets, Coffins, Burial Shrouds</p>
+                <p class="subtitle">Biodegradable Urns, Caskets, Coffins, Burial Shrouds. Private, Coffins Burial, A Seller Green and Natural.</p>
                 <a href="<?php echo esc_url(wc_get_page_permalink('shop')); ?>" class="btn-primary">Shop Now</a>
             </div>
             <div class="hero-images">
-                <img src="<?php echo get_template_directory_uri(); ?>/assets/images/hero-1.svg" alt="Biodegradable Urn" loading="eager" width="250" height="200">
-                <img src="<?php echo get_template_directory_uri(); ?>/assets/images/hero-2.svg" alt="Eco Casket" loading="eager" width="250" height="200">
-                <img src="<?php echo get_template_directory_uri(); ?>/assets/images/hero-3.svg" alt="Burial Basket" loading="eager" width="250" height="200">
-                <img src="<?php echo get_template_directory_uri(); ?>/assets/images/hero-4.svg" alt="Memorial Pot" loading="eager" width="250" height="200">
+                <!-- Overlapping images as per Figma -->
+                <img src="<?php echo get_template_directory_uri(); ?>/assets/images/hero-1.svg" alt="Biodegradable Urn" loading="eager" width="250" height="200" class="hero-img-1">
+                <img src="<?php echo get_template_directory_uri(); ?>/assets/images/hero-2.svg" alt="Eco Casket" loading="eager" width="250" height="200" class="hero-img-2">
+                <img src="<?php echo get_template_directory_uri(); ?>/assets/images/hero-3.svg" alt="Burial Basket" loading="eager" width="250" height="200" class="hero-img-3">
+                <img src="<?php echo get_template_directory_uri(); ?>/assets/images/hero-4.svg" alt="Memorial Pot" loading="eager" width="250" height="200" class="hero-img-4">
             </div>
         </div>
     </div>
@@ -245,7 +246,7 @@ get_header();
                 <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
             </div>
             <p class="review-text">"We were so pleased with the beautiful biodegradable urn we purchased. The quality exceeded our expectations and the service was exceptional. It gave us peace of mind knowing we made an environmentally conscious choice during a difficult time."</p>
-            <p class="review-author">- Sarah M., February 2019</p>
+            <p class="review-author">- William S. Nageli, February 4, 2019</p>
         </div>
     </div>
 </section>

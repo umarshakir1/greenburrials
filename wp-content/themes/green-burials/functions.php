@@ -38,8 +38,8 @@ add_action('after_setup_theme', 'green_burials_setup');
 
 // Enqueue optimized styles and scripts
 function green_burials_scripts() {
-    // Google Fonts - Playfair Display and Roboto with preload
-    wp_enqueue_style('playfair-font', 'https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Roboto:wght@400;600;700&display=swap', array(), null);
+    // Google Fonts - Playfair Display only (Body uses system fonts)
+    wp_enqueue_style('playfair-font', 'https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap', array(), null);
     
     // Main stylesheet - minified inline
     wp_enqueue_style('green-burials-style', get_stylesheet_uri(), array('playfair-font'), '1.1');
@@ -235,6 +235,7 @@ function green_burials_activation() {
             'post_name' => 'home',
             'post_status' => 'publish',
             'post_type' => 'page',
+            'post_content' => '', // Content handled by front-page.php
         ));
         update_option('page_on_front', $homepage_id);
         update_option('show_on_front', 'page');
@@ -431,12 +432,12 @@ function green_burials_inline_critical_css() {
     if (!is_front_page()) return;
     ?>
     <style id="critical-css">
-    :root{--primary-green:#73884D;--dark-green:#5A7A1F;--accent-gold:#C4B768}
+    :root{--primary-green:#73884D;--dark-green:#5A7A1F;--accent-gold:#C4B768;--text-dark:#333333;--bg-light:#F9F9F9;--sale-orange:#FF5722}
     *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:'Roboto',sans-serif;line-height:1.6;color:#333;background:#fff}
+    body{font-family:Arial,Helvetica,sans-serif;line-height:1.6;color:#333;background:#fff}
     .site-header{background:var(--primary-green);color:#fff;position:sticky;top:0;z-index:1000}
-    .hero-section{padding:3.75rem 0}
-    .hero-text h1{font-size:4.5rem;color:var(--primary-green);font-family:'Playfair Display',serif;text-transform:uppercase}
+    .hero-section{padding:5rem 0}
+    .hero-text h1{font-size:4rem;color:var(--primary-green);font-family:'Playfair Display',serif;font-weight:700;font-style:italic;line-height:1.1;text-transform:uppercase}
     .container{max-width:1200px;margin:0 auto;padding:0 1.5rem}
     </style>
     <?php
