@@ -18,10 +18,10 @@ get_header();
             </div>
             <div class="hero-images">
                 <!-- Overlapping images as per Figma -->
-                <img src="<?php echo get_template_directory_uri(); ?>/assets/images/hero-1.svg" alt="Biodegradable Urn" loading="eager" width="250" height="200" class="hero-img-1">
-                <img src="<?php echo get_template_directory_uri(); ?>/assets/images/hero-2.svg" alt="Eco Casket" loading="eager" width="250" height="200" class="hero-img-2">
-                <img src="<?php echo get_template_directory_uri(); ?>/assets/images/hero-3.svg" alt="Burial Basket" loading="eager" width="250" height="200" class="hero-img-3">
-                <img src="<?php echo get_template_directory_uri(); ?>/assets/images/hero-4.svg" alt="Memorial Pot" loading="eager" width="250" height="200" class="hero-img-4">
+                <img src="<?php echo get_template_directory_uri(); ?>/assets/figma_exported_images/Ellipse 1.png" alt="Biodegradable Urn" loading="eager" width="220" height="280" class="hero-img-1">
+                <img src="<?php echo get_template_directory_uri(); ?>/assets/figma_exported_images/Ellipse 2.png" alt="Eco Casket" loading="eager" width="240" height="180" class="hero-img-2">
+                <img src="<?php echo get_template_directory_uri(); ?>/assets/figma_exported_images/Mask group(1).png" alt="Burial Basket" loading="eager" width="200" height="240" class="hero-img-3">
+                <img src="<?php echo get_template_directory_uri(); ?>/assets/figma_exported_images/Mask group.png" alt="Memorial Pot" loading="eager" width="180" height="180" class="hero-img-4">
             </div>
         </div>
     </div>
@@ -59,16 +59,15 @@ get_header();
     <div class="container">
         <div class="green-burials-content">
             <div class="green-burials-images">
-                <img src="<?php echo get_template_directory_uri(); ?>/assets/images/casket-flowers.svg" alt="Eco-friendly casket with flowers" loading="lazy" width="350" height="300">
+                <img src="<?php echo get_template_directory_uri(); ?>/assets/figma_exported_images/image 52.png" alt="Eco-friendly casket with flowers" loading="lazy" width="500" height="300">
             </div>
             <div class="green-burials-text">
                 <h2>Green Burials</h2>
-                <p>We offer a wide selection of eco-friendly, biodegradable burial products that honor your loved ones while protecting our planet. Our products are crafted from natural materials that return to the earth safely.</p>
-                <p>From water cremation urns to biodegradable caskets, each item is designed with sustainability and dignity in mind. Choose green burials for a meaningful, environmentally conscious farewell.</p>
-                <a href="<?php echo esc_url(home_url('/about')); ?>" class="btn-primary">Learn More</a>
+                <p>Greenburials Biodegradable Urn, Casket And Coffin, Burial Shrouds And Keepsakes. All Our Products Are Certified By The Green Burial Council For Use In Natural Or Green Burial Grounds.</p>
+                <a href="<?php echo esc_url(home_url('/about')); ?>" class="btn-primary">Learn More For More</a>
             </div>
             <div class="green-burials-images">
-                <img src="<?php echo get_template_directory_uri(); ?>/assets/images/field-burial.svg" alt="Natural field burial" loading="lazy" width="350" height="300">
+                <img src="<?php echo get_template_directory_uri(); ?>/assets/figma_exported_images/image 53.png" alt="Natural field burial" loading="lazy" width="500" height="300">
             </div>
         </div>
     </div>
@@ -179,16 +178,30 @@ get_header();
 <section class="dual-banners">
     <div class="container">
         <div class="banner-card">
-            <img src="<?php echo get_template_directory_uri(); ?>/assets/images/bougainvillea-petals.svg" alt="Bougainvillea Memorial Petals" loading="lazy" width="600" height="400">
+            <img src="<?php echo get_template_directory_uri(); ?>/assets/figma_exported_images/Mask-group-5.png" alt="Bougainvillea Memorial Petals" loading="lazy" width="600" height="400">
             <div class="banner-overlay">
+                <svg class="lotus-icon" width="60" height="60" viewBox="0 0 60 60" fill="white" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M30 10C25 10 20 15 20 20C20 15 15 10 10 10C15 10 20 5 20 0C20 5 25 10 30 10Z"/>
+                    <path d="M30 10C35 10 40 15 40 20C40 15 45 10 50 10C45 10 40 5 40 0C40 5 35 10 30 10Z"/>
+                    <path d="M30 20C25 20 20 25 20 30C20 25 15 20 10 20C15 20 20 15 20 10C20 15 25 20 30 20Z"/>
+                    <path d="M30 20C35 20 40 25 40 30C40 25 45 20 50 20C45 20 40 15 40 10C40 15 35 20 30 20Z"/>
+                </svg>
                 <h3>Bougainvillea Memorial Petals</h3>
+                <p class="banner-price">$29</p>
                 <a href="<?php echo esc_url(home_url('/product-category/memorial-petals')); ?>" class="btn-primary">Shop Now</a>
             </div>
         </div>
         <div class="banner-card">
-            <img src="<?php echo get_template_directory_uri(); ?>/assets/images/water-burials.svg" alt="Water Burials With Petals" loading="lazy" width="600" height="400">
+            <img src="<?php echo get_template_directory_uri(); ?>/assets/figma_exported_images/Mask-group-3.png" alt="Water Burials With Petals" loading="lazy" width="600" height="400">
             <div class="banner-overlay">
+                <svg class="lotus-icon" width="60" height="60" viewBox="0 0 60 60" fill="white" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M30 10C25 10 20 15 20 20C20 15 15 10 10 10C15 10 20 5 20 0C20 5 25 10 30 10Z"/>
+                    <path d="M30 10C35 10 40 15 40 20C40 15 45 10 50 10C45 10 40 5 40 0C40 5 35 10 30 10Z"/>
+                    <path d="M30 20C25 20 20 25 20 30C20 25 15 20 10 20C15 20 20 15 20 10C20 15 25 20 30 20Z"/>
+                    <path d="M30 20C35 20 40 25 40 30C40 25 45 20 50 20C45 20 40 15 40 10C40 15 35 20 30 20Z"/>
+                </svg>
                 <h3>Water Burials With Petals</h3>
+                <p class="banner-price">$12</p>
                 <a href="<?php echo esc_url(home_url('/product-category/water-burials')); ?>" class="btn-primary">Shop Now</a>
             </div>
         </div>
@@ -238,6 +251,7 @@ get_header();
     <div class="container">
         <h2>Reviews</h2>
         <div class="review-card">
+            <p class="review-date">February 4, 2019</p>
             <div class="review-stars">
                 <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
                 <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
@@ -245,8 +259,12 @@ get_header();
                 <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
                 <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
             </div>
-            <p class="review-text">"We were so pleased with the beautiful biodegradable urn we purchased. The quality exceeded our expectations and the service was exceptional. It gave us peace of mind knowing we made an environmentally conscious choice during a difficult time."</p>
-            <p class="review-author">- William S. Nageli, February 4, 2019</p>
+            <blockquote class="review-text">
+                <span class="quote-open">"</span>
+                I wanted to thank you for your excellent customer service. I ordered an urn for my mother's ashes and it arrived quickly and was exactly as described. The quality is outstanding and the price was very reasonable. I would highly recommend your company to anyone looking for a beautiful and affordable urn. Thank you again for making this difficult time a little easier.
+                <span class="quote-close">"</span>
+            </blockquote>
+            <p class="review-author">William S. Nageli</p>
         </div>
     </div>
 </section>
@@ -297,7 +315,7 @@ get_header();
             <div class="newsletter-form">
                 <h2>Sign Up For Newsletter</h2>
                 <form action="#" method="post">
-                    <input type="email" name="email" placeholder="Enter your email address" required>
+                    <input type="email" name="email" placeholder="New Email" required>
                     <button type="submit">Subscribe</button>
                 </form>
             </div>
