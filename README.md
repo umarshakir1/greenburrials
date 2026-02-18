@@ -153,7 +153,7 @@ Replace placeholder images in `assets/images/`:
 ## Credits
 
 - **Theme Name**: Green Burials
-- **Author**: Windsurf AI
+- **Author**: Muhammad Umar
 - **Version**: 1.0
 - **License**: GPL v2 or later
 
