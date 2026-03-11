@@ -7,8 +7,6 @@
  * @package WooCommerce\Classes\Products
  */
 
-use Automattic\WooCommerce\Enums\ProductType;
-
 defined( 'ABSPATH' ) || exit;
 
 /**
@@ -32,7 +30,7 @@ class WC_Product_Simple extends WC_Product {
 	 * @return string
 	 */
 	public function get_type() {
-		return ProductType::SIMPLE;
+		return 'simple';
 	}
 
 	/**
@@ -47,7 +45,7 @@ class WC_Product_Simple extends WC_Product {
 				array(
 					'add-to-cart' => $this->get_id(),
 				),
-				( function_exists( 'is_feed' ) && is_feed() ) || ( function_exists( 'is_404' ) && is_404() ) ? $this->get_permalink() : false
+				( function_exists( 'is_feed' ) && is_feed() ) || ( function_exists( 'is_404' ) && is_404() ) ? $this->get_permalink() : ''
 			)
 		) : $this->get_permalink();
 		return apply_filters( 'woocommerce_product_add_to_cart_url', $url, $this );

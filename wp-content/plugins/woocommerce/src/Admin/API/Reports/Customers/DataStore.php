@@ -469,7 +469,7 @@ class DataStore extends ReportsDataStore implements DataStoreInterface {
 			$email = $order->get_billing_email( 'edit' );
 
 			if ( $email ) {
-				return self::get_customer_id_by_email( $email );
+				return self::get_guest_id_by_email( $email );
 			} else {
 				return false;
 			}
@@ -518,13 +518,7 @@ class DataStore extends ReportsDataStore implements DataStoreInterface {
 
 		$this->subquery->clear_sql_clause( 'select' );
 		$this->subquery->add_sql_clause( 'select', $selections );
-		// For aggregated fields, ensure deterministic ordering by including GROUP BY field.
-		$order_by = $this->get_sql_clause( 'order_by' );
-		if ( in_array( $order_by, array( 'orders_count', 'total_spend', 'avg_order_value' ), true ) ) {
-			$this->subquery->add_sql_clause( 'order_by', $order_by . ', customer_id' );
-		} else {
-			$this->subquery->add_sql_clause( 'order_by', $order_by );
-		}
+		$this->subquery->add_sql_clause( 'order_by', $this->get_sql_clause( 'order_by' ) );
 		$this->subquery->add_sql_clause( 'limit', $this->get_sql_clause( 'limit' ) );
 
 		$customer_data = $wpdb->get_results(
@@ -621,11 +615,6 @@ class DataStore extends ReportsDataStore implements DataStoreInterface {
 			if ( is_null( $customer_user ) ) {
 				$customer_user = new \WC_Customer( $user_id );
 			}
-
-			// Set email as customer email instead of Order Billing Email if we have a customer.
-			$data['email'] = $customer_user->get_email( 'edit' );
-
-			// Adding other relevant customer data.
 			$data['user_id']         = $user_id;
 			$data['username']        = $customer_user->get_username( 'edit' );
 			$data['date_registered'] = $customer_user->get_date_created( 'edit' ) ? $customer_user->get_date_created( 'edit' )->date( TimeInterval::$sql_datetime_format ) : null;
@@ -650,32 +639,6 @@ class DataStore extends ReportsDataStore implements DataStoreInterface {
 			$wpdb->prepare(
 				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 				"SELECT customer_id FROM {$table_name} WHERE email = %s AND user_id IS NULL LIMIT 1",
-				$email
-			)
-		);
-
-		return $customer_id ? (int) $customer_id : false;
-	}
-
-	/**
-	 * Retrieve a customer ID by email address, regardless of user registration status.
-	 * Prioritizes registered customers over guest customers when both exist.
-	 *
-	 * @param string $email Email address.
-	 * @return false|int Customer ID if found, boolean false if not.
-	 */
-	public static function get_customer_id_by_email( $email ) {
-		global $wpdb;
-
-		if ( empty( $email ) || ! is_email( $email ) ) {
-			return false;
-		}
-
-		$table_name  = self::get_db_table_name();
-		$customer_id = $wpdb->get_var(
-			$wpdb->prepare(
-				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-				"SELECT customer_id FROM {$table_name} WHERE email = %s ORDER BY user_id IS NOT NULL DESC LIMIT 1",
 				$email
 			)
 		);
@@ -950,18 +913,14 @@ class DataStore extends ReportsDataStore implements DataStoreInterface {
 	 * Anonymize the customer data for a single order.
 	 *
 	 * @internal
-	 * @param int|WC_Order $order Order instance or ID.
+	 * @param int $order_id Order id.
 	 * @return void
 	 */
-	public static function anonymize_customer( $order ) {
+	public static function anonymize_customer( $order_id ) {
 		global $wpdb;
 
-		if ( ! is_object( $order ) ) {
-			$order = wc_get_order( absint( $order ) );
-		}
-
 		$customer_id = $wpdb->get_var(
-			$wpdb->prepare( "SELECT customer_id FROM {$wpdb->prefix}wc_order_stats WHERE order_id = %d", $order->get_id() )
+			$wpdb->prepare( "SELECT customer_id FROM {$wpdb->prefix}wc_order_stats WHERE order_id = %d", $order_id )
 		);
 
 		if ( ! $customer_id ) {

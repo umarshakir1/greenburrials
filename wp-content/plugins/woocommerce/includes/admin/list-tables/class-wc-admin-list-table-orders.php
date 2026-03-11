@@ -6,7 +6,6 @@
  * @version 3.3.0
  */
 
-use Automattic\WooCommerce\Enums\OrderStatus;
 use Automattic\WooCommerce\Internal\Admin\Orders\ListTable;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -284,28 +283,10 @@ class WC_Admin_List_Table_Orders extends WC_Admin_List_Table {
 				</thead>
 				<tbody>';
 
-		$refunds = array();
-		foreach ( $order->get_refunds() as $refund ) {
-			foreach ( $refund->get_items() as $item ) {
-				$product_id = $item->get_product_id();
-				if ( array_key_exists( $product_id, $refunds ) ) {
-					$refunds[ $product_id ]['quantity'] += absint( $item->get_quantity() );
-					$refunds[ $product_id ]['total']    += abs( (float) $item->get_total() );
-				} else {
-					$refunds[ $product_id ] = array(
-						'quantity' => absint( $item->get_quantity() ),
-						'total'    => abs( (float) $item->get_total() ),
-					);
-				}
-			}
-		}
-
-		$price_args = array( 'currency' => $order->get_currency() );
 		foreach ( $line_items as $item_id => $item ) {
 
 			$product_object = is_callable( array( $item, 'get_product' ) ) ? $item->get_product() : null;
 			$row_class      = apply_filters( 'woocommerce_admin_html_order_preview_item_class', '', $item, $order );
-			$refund         = $refunds[ $item->get_product_id() ] ?? null;
 
 			$html .= '<tr class="wc-order-preview-table__item wc-order-preview-table__item--' . esc_attr( $item_id ) . ( $row_class ? ' ' . esc_attr( $row_class ) : '' ) . '">';
 
@@ -335,18 +316,12 @@ class WC_Admin_List_Table_Orders extends WC_Admin_List_Table {
 						break;
 					case 'quantity':
 						$html .= esc_html( $item->get_quantity() );
-						if ( $refund ) {
-							$html .= "<div><small class='refunded'>-" . $refund['quantity'] . '</small></div><br/>';
-						}
 						break;
 					case 'tax':
-						$html .= wc_price( $item->get_total_tax(), $price_args );
+						$html .= wc_price( $item->get_total_tax(), array( 'currency' => $order->get_currency() ) );
 						break;
 					case 'total':
-						$html .= wc_price( $item->get_total(), $price_args );
-						if ( $refund ) {
-							$html .= "<div><small class='refunded'>-" . wc_price( $refund['total'], $price_args ) . '</small></div><br/>';
-						}
+						$html .= wc_price( $item->get_total(), array( 'currency' => $order->get_currency() ) );
 						break;
 					default:
 						$html .= apply_filters( 'woocommerce_admin_order_preview_line_item_column_' . sanitize_key( $column ), '', $item, $item_id, $order );
@@ -376,12 +351,7 @@ class WC_Admin_List_Table_Orders extends WC_Admin_List_Table {
 		$actions        = array();
 		$status_actions = array();
 
-		$wp_post_type = get_post_type_object( $order->get_type() ) ?? get_post_type_object( 'shop_order' );
-		if ( ! current_user_can( $wp_post_type->cap->edit_post, $order->get_id() ) ) {
-			return '';
-		}
-
-		if ( $order->has_status( array( OrderStatus::PENDING ) ) ) {
+		if ( $order->has_status( array( 'pending' ) ) ) {
 			$status_actions['on-hold'] = array(
 				'url'    => wp_nonce_url( admin_url( 'admin-ajax.php?action=woocommerce_mark_order_status&status=on-hold&order_id=' . $order->get_id() ), 'woocommerce-mark-order-status' ),
 				'name'   => __( 'On-hold', 'woocommerce' ),
@@ -390,7 +360,7 @@ class WC_Admin_List_Table_Orders extends WC_Admin_List_Table {
 			);
 		}
 
-		if ( $order->has_status( array( OrderStatus::PENDING, OrderStatus::ON_HOLD ) ) ) {
+		if ( $order->has_status( array( 'pending', 'on-hold' ) ) ) {
 			$status_actions['processing'] = array(
 				'url'    => wp_nonce_url( admin_url( 'admin-ajax.php?action=woocommerce_mark_order_status&status=processing&order_id=' . $order->get_id() ), 'woocommerce-mark-order-status' ),
 				'name'   => __( 'Processing', 'woocommerce' ),
@@ -399,7 +369,7 @@ class WC_Admin_List_Table_Orders extends WC_Admin_List_Table {
 			);
 		}
 
-		if ( $order->has_status( array( OrderStatus::PENDING, OrderStatus::ON_HOLD, OrderStatus::PROCESSING ) ) ) {
+		if ( $order->has_status( array( 'pending', 'on-hold', 'processing' ) ) ) {
 			$status_actions['complete'] = array(
 				'url'    => wp_nonce_url( admin_url( 'admin-ajax.php?action=woocommerce_mark_order_status&status=completed&order_id=' . $order->get_id() ), 'woocommerce-mark-order-status' ),
 				'name'   => __( 'Completed', 'woocommerce' ),
@@ -448,20 +418,10 @@ class WC_Admin_List_Table_Orders extends WC_Admin_List_Table {
 		$billing_address  = $order->get_formatted_billing_address();
 		$shipping_address = $order->get_formatted_shipping_address();
 
-		$wp_post_type = get_post_type_object( $order->get_type() ) ?? get_post_type_object( 'shop_order' );
-		$is_editable  = current_user_can( $wp_post_type->cap->edit_post, $order->get_id() );
-
-		// phpcs:disable WooCommerce.Commenting.CommentHooks.MissingSinceComment
-		/**
-		 * Filter to customize the order details data that the woocommerce_get_order_details action will send.
-		 *
-		 * @param array $order_details Order details.
-		 */
-		$order_details = apply_filters(
+		return apply_filters(
 			'woocommerce_admin_order_preview_get_order_details',
 			array(
 				'data'                       => $order->get_data(),
-				'is_editable'                => $is_editable,
 				'order_number'               => $order->get_order_number(),
 				'item_html'                  => self::get_order_preview_item_html( $order ),
 				'actions_html'               => self::get_order_preview_actions_html( $order ),
@@ -477,11 +437,6 @@ class WC_Admin_List_Table_Orders extends WC_Admin_List_Table {
 			),
 			$order
 		);
-		// phpcs:enable WooCommerce.Commenting.CommentHooks.MissingSinceComment
-
-		$order_details['data'] = array_intersect_key( $order_details['data'], array_flip( array( 'id', 'billing', 'shipping', 'customer_note' ) ) );
-
-		return $order_details;
 	}
 
 	/**
@@ -504,7 +459,7 @@ class WC_Admin_List_Table_Orders extends WC_Admin_List_Table {
 
 				if ( $order ) {
 					do_action( 'woocommerce_remove_order_personal_data', $order );
-					++$changed;
+					$changed++;
 				}
 			}
 		} elseif ( false !== strpos( $action, 'mark_' ) ) {
@@ -521,7 +476,7 @@ class WC_Admin_List_Table_Orders extends WC_Admin_List_Table {
 					$order = wc_get_order( $id );
 					$order->update_status( $new_status, __( 'Order status changed by bulk edit:', 'woocommerce' ), true );
 					do_action( 'woocommerce_order_edit_status', $id, $new_status );
-					++$changed;
+					$changed++;
 				}
 			}
 		}
@@ -588,7 +543,6 @@ class WC_Admin_List_Table_Orders extends WC_Admin_List_Table {
 	 * Render any custom filters and search inputs for the list table.
 	 */
 	protected function render_filters() {
-		$this->orders_list_table->created_via_filter();
 		$this->orders_list_table->customers_filter();
 	}
 
@@ -630,21 +584,6 @@ class WC_Admin_List_Table_Orders extends WC_Admin_List_Table {
 			// @codingStandardsIgnoreEnd
 		}
 
-		// Filter the orders by created via.
-		if ( ! empty( $_GET['_created_via'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-			// @codingStandardsIgnoreStart
-			$created_via = explode(',', sanitize_text_field( wp_unslash( $_GET['_created_via'] ) ) );
-
-			$query_vars['meta_query'] = array(
-				array(
-					'key'     => '_created_via',
-					'value'   => $created_via,
-					'compare' => 'IN',
-				),
-			);
-			// @codingStandardsIgnoreEnd
-		}
-
 		// Sorting.
 		if ( isset( $query_vars['orderby'] ) ) {
 			if ( 'order_total' === $query_vars['orderby'] ) {
@@ -669,7 +608,6 @@ class WC_Admin_List_Table_Orders extends WC_Admin_List_Table {
 
 			$query_vars['post_status'] = array_keys( $post_statuses );
 		}
-
 		return $query_vars;
 	}
 

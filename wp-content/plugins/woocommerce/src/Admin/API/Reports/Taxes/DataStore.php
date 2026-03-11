@@ -124,7 +124,6 @@ class DataStore extends ReportsDataStore implements DataStoreInterface {
 	/**
 	 * Updates the database query with parameters used for Taxes report: categories and order status.
 	 *
-	 * @see Automattic\WooCommerce\Admin\API\Reports\Taxes\Stats\DataStore::update_sql_query_params()
 	 * @param array $query_args Query arguments supplied by the user.
 	 */
 	protected function add_sql_query_params( $query_args ) {
@@ -208,11 +207,8 @@ class DataStore extends ReportsDataStore implements DataStoreInterface {
 
 		$this->subquery->clear_sql_clause( 'select' );
 		$this->subquery->add_sql_clause( 'select', $this->selected_columns( $query_args ) );
-		if ( in_array( $query_args['orderby'], array( 'total_tax', 'order_tax', 'shipping_tax', 'orders_count' ), true ) ) {
-			$this->subquery->add_sql_clause( 'order_by', $this->get_sql_clause( 'order_by' ) . ', tax_rate_id' );
-		} else {
-			$this->subquery->add_sql_clause( 'order_by', $this->get_sql_clause( 'order_by' ) );
-		}
+		$this->subquery->add_sql_clause( 'group_by', ", {$wpdb->prefix}woocommerce_order_items.order_item_name, {$wpdb->prefix}woocommerce_order_itemmeta.meta_value" );
+		$this->subquery->add_sql_clause( 'order_by', $this->get_sql_clause( 'order_by' ) );
 		$this->subquery->add_sql_clause( 'limit', $this->get_sql_clause( 'limit' ) );
 
 		$taxes_query = $this->subquery->get_query_statement();
@@ -336,13 +332,10 @@ class DataStore extends ReportsDataStore implements DataStoreInterface {
 	 * Initialize query objects.
 	 */
 	protected function initialize_queries() {
-		global $wpdb;
-
 		$this->clear_all_clauses();
 		$this->subquery = new SqlQuery( $this->context . '_subquery' );
 		$this->subquery->add_sql_clause( 'select', self::get_db_table_name() . '.tax_rate_id' );
 		$this->subquery->add_sql_clause( 'from', self::get_db_table_name() );
 		$this->subquery->add_sql_clause( 'group_by', self::get_db_table_name() . '.tax_rate_id' );
-		$this->subquery->add_sql_clause( 'group_by', ", {$wpdb->prefix}woocommerce_order_items.order_item_name, {$wpdb->prefix}woocommerce_order_itemmeta.meta_value" );
 	}
 }

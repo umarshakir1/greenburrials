@@ -90,12 +90,7 @@ class WC_Product_Usage_Notice {
 			return;
 		}
 
-		try {
-			self::$product_usage_notice_rules = WC_Helper::get_product_usage_notice_rules();
-		} catch ( Exception $e ) {
-			return;
-		}
-
+		self::$product_usage_notice_rules = WC_Helper::get_product_usage_notice_rules();
 		if ( empty( self::$product_usage_notice_rules ) ) {
 			return;
 		}

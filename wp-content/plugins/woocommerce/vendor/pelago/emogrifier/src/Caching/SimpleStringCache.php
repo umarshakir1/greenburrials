@@ -20,7 +20,7 @@ namespace Pelago\Emogrifier\Caching;
  *
  * @internal
  */
-final class SimpleStringCache
+class SimpleStringCache
 {
     /**
      * @var array<string, string>

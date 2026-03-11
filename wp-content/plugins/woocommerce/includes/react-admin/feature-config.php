@@ -7,11 +7,7 @@ if ( ! function_exists( 'wc_admin_get_feature_config' ) ) {
 			'activity-panels' => true,
 			'analytics' => true,
 			'product-block-editor' => true,
-			'product-data-views' => false,
 			'experimental-blocks' => false,
-			'experimental-iapi-mini-cart' => false,
-			'experimental-iapi-runtime' => false,
-			'coming-soon-newsletter-template' => false,
 			'coupons' => true,
 			'core-profiler' => true,
 			'customize-store' => true,
@@ -24,6 +20,7 @@ if ( ! function_exists( 'wc_admin_get_feature_config' ) ) {
 			'marketing' => true,
 			'minified-js' => false,
 			'mobile-app-banner' => true,
+			'navigation' => true,
 			'onboarding' => true,
 			'onboarding-tasks' => true,
 			'pattern-toolkit-full-composability' => true,
@@ -44,8 +41,8 @@ if ( ! function_exists( 'wc_admin_get_feature_config' ) ) {
 			'async-product-editor-category-field' => false,
 			'launch-your-store' => true,
 			'product-editor-template-system' => false,
-			'use-wp-horizon' => false,
-			'rest-api-v4' => false,
+			'blueprint' => false,
+			'reactify-classic-payments-settings' => false,
 		);
 	}
 }

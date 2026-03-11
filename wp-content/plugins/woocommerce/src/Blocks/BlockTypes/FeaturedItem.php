@@ -37,7 +37,6 @@ abstract class FeaturedItem extends AbstractDynamicBlock {
 		'font_size',
 		'padding',
 		'text_color',
-		'extra_classes',
 	);
 
 	/**
@@ -88,7 +87,6 @@ abstract class FeaturedItem extends AbstractDynamicBlock {
 			return '';
 		}
 
-		$aria_label = $attributes['ariaLabel'] ?? '';
 		$attributes = wp_parse_args( $attributes, $this->defaults );
 
 		$attributes['height'] = $attributes['height'] ?? wc_get_theme_support( 'featured_block::default_height', 500 );
@@ -106,15 +104,6 @@ abstract class FeaturedItem extends AbstractDynamicBlock {
 			$output .= $this->render_image( $attributes, $item, $image_url );
 		} else {
 			$output .= $this->render_bg_image( $attributes, $image_url );
-		}
-
-		if ( isset( $aria_label ) && ! empty( $aria_label ) ) {
-			$p = new \WP_HTML_Tag_Processor( $content );
-
-			if ( $p->next_tag( 'a', [ 'class' => 'wp-block-button__link' ] ) ) {
-				$p->set_attribute( 'aria-label', $aria_label );
-				$content = $p->get_updated_html();
-			}
 		}
 
 		$output .= $this->render_attributes( $item, $attributes );
@@ -281,6 +270,10 @@ abstract class FeaturedItem extends AbstractDynamicBlock {
 
 		if ( isset( $attributes['contentAlign'] ) && 'center' !== $attributes['contentAlign'] ) {
 			$classes[] = "has-{$attributes['contentAlign']}-content";
+		}
+
+		if ( isset( $attributes['className'] ) ) {
+			$classes[] = $attributes['className'];
 		}
 
 		$global_style_classes = StyleAttributesUtils::get_classes_by_attributes( $attributes, $this->global_style_wrapper );

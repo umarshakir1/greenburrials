@@ -160,11 +160,7 @@ class WC_REST_Tax_Classes_V1_Controller extends WC_REST_Controller {
 			$data[] = $class;
 		}
 
-		$total    = count( $data );
-		$response = rest_ensure_response( $data );
-		$response->header( 'X-WP-Total', (int) $total );
-		$response->header( 'X-WP-TotalPages', $total ? 1 : 0 );
-		return $response;
+		return rest_ensure_response( $data );
 	}
 
 	/**

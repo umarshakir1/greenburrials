@@ -162,7 +162,7 @@ VERSION INFO
 
 Theme Name:     Green Burials
 Version:        1.0
-Author:         Windsurf AI
+Author:         Hanzala
 Created:        December 2025
 License:        GPL v2 or later
 Status:         Production Ready ✅

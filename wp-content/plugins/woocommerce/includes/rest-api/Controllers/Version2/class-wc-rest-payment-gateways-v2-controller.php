@@ -11,7 +11,7 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Payment gateways controller class.
+ * Paymenga gateways controller class.
  *
  * @package WooCommerce\RestApi
  * @extends WC_REST_Controller
@@ -121,19 +121,14 @@ class WC_REST_Payment_Gateways_V2_Controller extends WC_REST_Controller {
 	 */
 	public function get_items( $request ) {
 		$payment_gateways = WC()->payment_gateways->payment_gateways();
-		$data             = array();
+		$response         = array();
 		foreach ( $payment_gateways as $payment_gateway_id => $payment_gateway ) {
 			$payment_gateway->id = $payment_gateway_id;
 			$gateway             = $this->prepare_item_for_response( $payment_gateway, $request );
 			$gateway             = $this->prepare_response_for_collection( $gateway );
-			$data[]              = $gateway;
+			$response[]          = $gateway;
 		}
-
-		$total    = count( $data );
-		$response = rest_ensure_response( $data );
-		$response->header( 'X-WP-Total', (int) $total );
-		$response->header( 'X-WP-TotalPages', $total ? 1 : 0 );
-		return $response;
+		return rest_ensure_response( $response );
 	}
 
 	/**
@@ -201,13 +196,13 @@ class WC_REST_Payment_Gateways_V2_Controller extends WC_REST_Controller {
 
 		// Update title.
 		if ( isset( $request['title'] ) ) {
-			$settings['title'] = $this->validate_setting_text_field( $request['title'], $gateway->form_fields['title'] ?? array() );
+			$settings['title'] = $request['title'];
 			$gateway->title    = $settings['title'];
 		}
 
 		// Update description.
 		if ( isset( $request['description'] ) ) {
-			$settings['description'] = $this->validate_setting_text_field( $request['description'], $gateway->form_fields['description'] ?? array() );
+			$settings['description'] = $request['description'];
 			$gateway->description    = $settings['description'];
 		}
 
@@ -218,7 +213,7 @@ class WC_REST_Payment_Gateways_V2_Controller extends WC_REST_Controller {
 		// Update order.
 		if ( isset( $request['order'] ) ) {
 			$order                 = (array) get_option( 'woocommerce_gateway_order' );
-			$order[ $gateway->id ] = absint( $request['order'] );
+			$order[ $gateway->id ] = $request['order'];
 			update_option( 'woocommerce_gateway_order', $order );
 			$gateway->order = absint( $request['order'] );
 		}

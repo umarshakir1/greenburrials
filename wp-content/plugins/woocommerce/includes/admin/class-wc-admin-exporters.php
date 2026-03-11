@@ -3,11 +3,10 @@
  * Init WooCommerce data exporters.
  *
  * @package     WooCommerce\Admin
- * @version     x.x.x
+ * @version     3.1.0
  */
 
 use Automattic\Jetpack\Constants;
-use Automattic\WooCommerce\Enums\ProductType;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -35,7 +34,6 @@ class WC_Admin_Exporters {
 
 		add_action( 'admin_menu', array( $this, 'add_to_menus' ) );
 		add_action( 'admin_head', array( $this, 'hide_from_menus' ) );
-		add_action( 'admin_head', array( $this, 'menu_highlight_for_product_export' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_scripts' ) );
 		add_action( 'admin_init', array( $this, 'download_export_file' ) );
 		add_action( 'wp_ajax_woocommerce_do_ajax_product_export', array( $this, 'do_ajax_product_export' ) );
@@ -81,19 +79,6 @@ class WC_Admin_Exporters {
 					}
 				}
 			}
-		}
-	}
-
-	/**
-	 * Highlight Products > All Products submenu for Product Exporter.
-	 */
-	public function menu_highlight_for_product_export() {
-		global $submenu_file;
-
-		$screen = get_current_screen();
-
-		if ( $screen && 'product_page_product_exporter' === $screen->id ) {
-			$submenu_file = 'edit.php?post_type=product'; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
 		}
 	}
 
@@ -172,15 +157,6 @@ class WC_Admin_Exporters {
 			$exporter->set_product_category_to_export( wp_unslash( array_values( $_POST['export_category'] ) ) ); // WPCS: input var ok, sanitization ok.
 		}
 
-		// Set specific product IDs if provided.
-		if ( ! empty( $_POST['export_product_ids'] ) ) { // WPCS: input var ok.
-			$ids_raw = explode( ',', sanitize_text_field( wp_unslash( $_POST['export_product_ids'] ) ) ); // WPCS: input var ok, sanitization ok.
-
-			if ( ! empty( $ids_raw ) ) {
-				$exporter->set_product_ids_to_export( $ids_raw );
-			}
-		}
-
 		if ( ! empty( $_POST['filename'] ) ) { // WPCS: input var ok.
 			$exporter->set_filename( wp_unslash( $_POST['filename'] ) ); // WPCS: input var ok, sanitization ok.
 		}
@@ -223,8 +199,8 @@ class WC_Admin_Exporters {
 	 * @return array The product types keys and labels.
 	 */
 	public static function get_product_types() {
-		$product_types                           = wc_get_product_types();
-		$product_types[ ProductType::VARIATION ] = __( 'Product variations', 'woocommerce' );
+		$product_types              = wc_get_product_types();
+		$product_types['variation'] = __( 'Product variations', 'woocommerce' );
 
 		/**
 		 * Allow third-parties to filter the exportable product types.

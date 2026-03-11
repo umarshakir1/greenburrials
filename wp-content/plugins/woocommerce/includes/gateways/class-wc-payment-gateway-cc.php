@@ -5,8 +5,6 @@
  * @package WooCommerce\Gateways
  */
 
-use Automattic\WooCommerce\Enums\PaymentGatewayFeature;
-
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -26,7 +24,7 @@ class WC_Payment_Gateway_CC extends WC_Payment_Gateway {
 	 * @since 2.6.0
 	 */
 	public function payment_fields() {
-		if ( $this->supports( PaymentGatewayFeature::TOKENIZATION ) && is_checkout() ) {
+		if ( $this->supports( 'tokenization' ) && is_checkout() ) {
 			$this->tokenization_script();
 			$this->saved_payment_methods();
 			$this->form();
@@ -46,7 +44,7 @@ class WC_Payment_Gateway_CC extends WC_Payment_Gateway {
 	 * @return string
 	 */
 	public function field_name( $name ) {
-		return $this->supports( PaymentGatewayFeature::TOKENIZATION ) ? '' : ' name="' . esc_attr( $this->id . '-' . $name ) . '" ';
+		return $this->supports( 'tokenization' ) ? '' : ' name="' . esc_attr( $this->id . '-' . $name ) . '" ';
 	}
 
 	/**
@@ -75,7 +73,7 @@ class WC_Payment_Gateway_CC extends WC_Payment_Gateway {
 			</p>',
 		);
 
-		if ( ! $this->supports( PaymentGatewayFeature::CREDIT_CARD_FORM_CVC_ON_SAVED_METHOD ) ) {
+		if ( ! $this->supports( 'credit_card_form_cvc_on_saved_method' ) ) {
 			$default_fields['card-cvc-field'] = $cvc_field;
 		}
 
@@ -94,7 +92,7 @@ class WC_Payment_Gateway_CC extends WC_Payment_Gateway {
 		</fieldset>
 		<?php
 
-		if ( $this->supports( PaymentGatewayFeature::CREDIT_CARD_FORM_CVC_ON_SAVED_METHOD ) ) {
+		if ( $this->supports( 'credit_card_form_cvc_on_saved_method' ) ) {
 			echo '<fieldset>' . $cvc_field . '</fieldset>'; // phpcs:ignore WordPress.XSS.EscapeOutput.OutputNotEscaped
 		}
 	}

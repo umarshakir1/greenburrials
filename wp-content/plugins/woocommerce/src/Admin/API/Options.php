@@ -3,19 +3,7 @@
  * REST API Options Controller
  *
  * Handles requests to get and update options in the wp_options table.
- *
- * IMPORTANT: This API is for legacy support only. DO NOT add new options here. See p90Yrv-2vK-p2#comment-6482 for more details.
- * For new settings/options, use Settings REST API (https://woocommerce.github.io/woocommerce-rest-api-docs/#setting-option-properties) or create dedicated endpoints instead.
- *
- * Example:
- * - Use register_rest_route() to create a new endpoint
- * - Follow WooCommerce REST API standards
- * - Implement proper permission checks
- * - Add proper documentation
- * See Automattic\WooCommerce\Admin\API\OnboardingProfile for examples.
  */
-
-declare(strict_types=1);
 
 namespace Automattic\WooCommerce\Admin\API;
 
@@ -89,6 +77,14 @@ class Options extends \WC_REST_Data_Controller {
 
 		foreach ( $params as $option ) {
 			if ( ! $this->user_has_permission( $option, $request ) ) {
+				if ( 'production' !== wp_get_environment_type() ) {
+					return new \WP_Error(
+						'woocommerce_rest_cannot_view',
+						__( 'Sorry, you cannot view these options, please remember to update the option permissions in Options API to allow viewing these options in non-production environments.', 'woocommerce' ),
+						array( 'status' => rest_authorization_required_code() )
+					);
+				}
+
 				return new \WP_Error( 'woocommerce_rest_cannot_view', __( 'Sorry, you cannot view these options.', 'woocommerce' ), array( 'status' => rest_authorization_required_code() ) );
 			}
 		}
@@ -111,13 +107,12 @@ class Options extends \WC_REST_Data_Controller {
 			return $permissions[ $option ];
 		}
 
-		wc_deprecated_function( 'Automattic\WooCommerce\Admin\API\Options::' . ( $is_update ? 'update_options' : 'get_options' ), '6.3' );
-
-		// Disallow option updates in non-production environments unless the option is whitelisted, prompting developers to create specific endpoints in case they miss the deprecation notice.
+		// Don't allow to update options in non-production environments if the option is not whitelisted. This is to force developers to update the option permissions when adding new options.
 		if ( 'production' !== wp_get_environment_type() ) {
 			return false;
 		}
 
+		wc_deprecated_function( 'Automattic\WooCommerce\Admin\API\Options::' . ( $is_update ? 'update_options' : 'get_options' ), '6.3' );
 		return current_user_can( 'manage_options' );
 	}
 
@@ -160,13 +155,8 @@ class Options extends \WC_REST_Data_Controller {
 	 * @return array
 	 */
 	public static function get_default_option_permissions() {
-		$is_woocommerce_admin = \Automattic\WooCommerce\Internal\Admin\Homescreen::is_admin_user();
-
-		/**
-		 * IMPORTANT: This list is frozen for legacy support.
-		 * New options MUST use dedicated endpoints instead of being added here.
-		 */
-		$legacy_whitelisted_options = array(
+		$is_woocommerce_admin    = \Automattic\WooCommerce\Internal\Admin\Homescreen::is_admin_user();
+		$woocommerce_permissions = array(
 			'woocommerce_setup_jetpack_opted_in',
 			'woocommerce_stripe_settings',
 			'woocommerce-ppcp-settings',
@@ -233,9 +223,6 @@ class Options extends \WC_REST_Data_Controller {
 			'woocommerce_private_link',
 			'woocommerce_share_key',
 			'woocommerce_show_lys_tour',
-			'woocommerce_remote_variant_assignment',
-			'woocommerce_gateway_order',
-			'woocommerce_woopayments_nox_profile',
 			// WC Test helper options.
 			'wc-admin-test-helper-rest-api-filters',
 			'wc_admin_helper_feature_values',
@@ -248,7 +235,7 @@ class Options extends \WC_REST_Data_Controller {
 
 		return array_merge(
 			array_fill_keys( $theme_permissions, current_user_can( 'edit_theme_options' ) ),
-			array_fill_keys( $legacy_whitelisted_options, $is_woocommerce_admin )
+			array_fill_keys( $woocommerce_permissions, $is_woocommerce_admin )
 		);
 	}
 

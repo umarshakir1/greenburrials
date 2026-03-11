@@ -242,8 +242,6 @@ class CustomerEffortScoreTracks {
 			array()
 		);
 
-		$queue = is_array( $queue ) ? $queue : array();
-
 		$has_duplicate = array_filter(
 			$queue,
 			function ( $queue_item ) use ( $item ) {
@@ -352,7 +350,7 @@ class CustomerEffortScoreTracks {
 			array(
 				'action'         => self::PRODUCT_ADD_PUBLISH_ACTION_NAME,
 				'title'          => __(
-					'🎉 Congrats on adding your first product!',
+					'How easy was it to add a product?',
 					'woocommerce'
 				),
 				'firstQuestion'  => __(
@@ -455,13 +453,10 @@ class CustomerEffortScoreTracks {
 			return;
 		}
 
-		$queue = get_option(
+		$queue           = get_option(
 			self::CES_TRACKS_QUEUE_OPTION_NAME,
 			array()
 		);
-
-		$queue = is_array( $queue ) ? $queue : array();
-
 		$remaining_items = array_filter(
 			$queue,
 			function ( $item ) use ( $clear_ces_tracks_queue_for_page ) {

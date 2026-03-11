@@ -7,7 +7,6 @@
 
 namespace Automattic\WooCommerce\Admin\API;
 
-use Automattic\WooCommerce\Enums\ProductStatus;
 use Automattic\WooCommerce\Internal\Admin\Onboarding\OnboardingIndustries;
 use Automattic\WooCommerce\Internal\Admin\Onboarding\OnboardingProfile;
 use Automattic\WooCommerce\Admin\Features\Features;
@@ -38,7 +37,7 @@ class OnboardingTasks extends \WC_REST_Data_Controller {
 	protected $rest_base = 'onboarding/tasks';
 
 	/**
-	 * Duration to millisecond mapping.
+	 * Duration to milisecond mapping.
 	 *
 	 * @var array
 	 */
@@ -375,7 +374,7 @@ class OnboardingTasks extends \WC_REST_Data_Controller {
 			);
 		}
 		$product = wc_get_product( $import['imported'][0] );
-		$product->set_status( ProductStatus::AUTO_DRAFT );
+		$product->set_status( 'auto-draft' );
 		$product->save();
 
 		return rest_ensure_response(
@@ -441,7 +440,7 @@ class OnboardingTasks extends \WC_REST_Data_Controller {
 	 * @return string Block content.
 	 */
 	private static function get_homepage_cover_block( $image ) {
-		$shop_url = wc_get_page_permalink( 'shop' );
+		$shop_url = get_permalink( wc_get_page_id( 'shop' ) );
 		if ( ! empty( $image['url'] ) && ! empty( $image['id'] ) ) {
 			return '<!-- wp:cover {"url":"' . esc_url( $image['url'] ) . '","id":' . intval( $image['id'] ) . ',"dimRatio":0} -->
 			<div class="wp-block-cover" style="background-image:url(' . esc_url( $image['url'] ) . ')"><div class="wp-block-cover__inner-container"><!-- wp:paragraph {"align":"center","placeholder":"' . __( 'Write title…', 'woocommerce' ) . '","textColor":"white","fontSize":"large"} -->

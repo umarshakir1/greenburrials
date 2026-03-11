@@ -32,7 +32,7 @@ class Controller extends GenericController implements ExportableInterface {
 	protected $rest_base = 'reports/categories';
 
 	/**
-	 * Get data from `'categories'` GenericQuery.
+	 * Get data from `'categories'` Query.
 	 *
 	 * @override GenericController::get_datastore_data()
 	 *
@@ -171,15 +171,13 @@ class Controller extends GenericController implements ExportableInterface {
 	public function get_collection_params() {
 		$params                       = parent::get_collection_params();
 		$params['orderby']['default'] = 'category_id';
-		$params['orderby']['enum']    = $this->apply_custom_orderby_filters(
-			array(
-				'category_id',
-				'items_sold',
-				'net_revenue',
-				'orders_count',
-				'products_count',
-				'category',
-			)
+		$params['orderby']['enum']    = array(
+			'category_id',
+			'items_sold',
+			'net_revenue',
+			'orders_count',
+			'products_count',
+			'category',
 		);
 		$params['interval']           = array(
 			'description'       => __( 'Time interval to use for buckets in the returned data.', 'woocommerce' ),

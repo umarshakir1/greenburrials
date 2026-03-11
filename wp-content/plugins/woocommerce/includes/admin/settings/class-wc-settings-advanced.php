@@ -5,7 +5,7 @@
  * @package  WooCommerce\Admin
  */
 
-use Automattic\WooCommerce\Utilities\FeaturesUtil;
+use Automattic\WooCommerce\Admin\Features\Features;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -33,13 +33,6 @@ class WC_Settings_Advanced extends WC_Settings_Page {
 	}
 
 	/**
-	 * Setting page icon.
-	 *
-	 * @var string
-	 */
-	public $icon = 'more';
-
-	/**
 	 * Get own sections.
 	 *
 	 * @return array
@@ -53,8 +46,8 @@ class WC_Settings_Advanced extends WC_Settings_Page {
 			'woocommerce_com' => __( 'WooCommerce.com', 'woocommerce' ),
 		);
 
-		if ( FeaturesUtil::feature_is_enabled( 'blueprint' ) ) {
-			$sections['blueprint'] = __( 'Blueprint (beta)', 'woocommerce' );
+		if ( Features::is_enabled( 'blueprint' ) ) {
+			$sections['blueprint'] = __( 'Blueprint', 'woocommerce' );
 		}
 
 		return $sections;
@@ -361,7 +354,7 @@ class WC_Settings_Advanced extends WC_Settings_Page {
 					'type'          => 'checkbox',
 					'checkboxgroup' => 'start',
 					'default'       => 'no',
-					'autoload'      => true,
+					'autoload'      => false,
 				),
 				array(
 					'type' => 'sectionend',
@@ -376,7 +369,7 @@ class WC_Settings_Advanced extends WC_Settings_Page {
 				array(
 					'title'         => __( 'Show Suggestions', 'woocommerce' ),
 					'desc'          => __( 'Display suggestions within WooCommerce', 'woocommerce' ),
-					'desc_tip'      => esc_html__( 'Leave this box unchecked if you do not want to pull suggested extensions from WooCommerce.com.', 'woocommerce' ),
+					'desc_tip'      => esc_html__( 'Leave this box unchecked if you do not want to pull suggested extensions from WooCommerce.com. You will see a static list of extensions instead.', 'woocommerce' ),
 					'id'            => 'woocommerce_show_marketplace_suggestions',
 					'type'          => 'checkbox',
 					'checkboxgroup' => 'start',
@@ -448,6 +441,10 @@ class WC_Settings_Advanced extends WC_Settings_Page {
 		$settings =
 			array(
 				array(
+					'title' => esc_html__( 'Blueprint', 'woocommerce' ),
+					'type'  => 'title',
+				),
+				array(
 					'id'   => 'wc_settings_blueprint_slotfill',
 					'type' => 'slotfill_placeholder',
 				),
@@ -487,11 +484,7 @@ class WC_Settings_Advanced extends WC_Settings_Page {
 	 * Output the settings.
 	 */
 	public function output() {
-		global $current_section, $hide_save_button;
-
-		if ( 'blueprint' === $current_section ) {
-			$hide_save_button = true;
-		}
+		global $current_section;
 
 		if ( 'webhooks' === $current_section ) {
 			WC_Admin_Webhooks::page_output();
@@ -508,9 +501,6 @@ class WC_Settings_Advanced extends WC_Settings_Page {
 	public function save() {
 		// phpcs:disable WordPress.Security.NonceVerification.Missing
 		global $current_section;
-
-		$prev_value = 'yes' === get_option( 'woocommerce_allow_tracking', 'no' ) ? 'yes' : 'no';
-		$new_value  = isset( $_POST['woocommerce_allow_tracking'] ) && ( 'yes' === $_POST['woocommerce_allow_tracking'] || '1' === $_POST['woocommerce_allow_tracking'] ) ? 'yes' : 'no';
 
 		if ( apply_filters( 'woocommerce_rest_api_valid_to_save', ! in_array( $current_section, array( 'keys', 'webhooks' ), true ) ) ) {
 			// Prevent the T&Cs and checkout page from being set to the same page.
@@ -531,16 +521,8 @@ class WC_Settings_Advanced extends WC_Settings_Page {
 				}
 			}
 
-			if ( class_exists( 'WC_Tracks' ) && 'no' === $new_value && 'yes' === $prev_value ) {
-				WC_Tracks::track_woocommerce_allow_tracking_toggled( $prev_value, $new_value, 'settings' );
-			}
-
 			$this->save_settings_for_current_section();
 			$this->do_update_options_action();
-
-			if ( class_exists( 'WC_Tracks' ) && 'yes' === $new_value && 'no' === $prev_value ) {
-				WC_Tracks::track_woocommerce_allow_tracking_toggled( $prev_value, $new_value, 'settings' );
-			}
 		}
 		// phpcs:enable
 	}

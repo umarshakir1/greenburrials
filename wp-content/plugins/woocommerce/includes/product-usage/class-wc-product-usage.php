@@ -75,12 +75,7 @@ class WC_Product_Usage {
 	 * @since 9.3.0
 	 */
 	private static function get_product_usage_restriction_rule( int $product_id ): ?array {
-		try {
-			$rules = WC_Helper::get_product_usage_notice_rules();
-		} catch ( Exception $e ) {
-			return null;
-		}
-
+		$rules = WC_Helper::get_product_usage_notice_rules();
 		if ( empty( $rules['restricted_products'][ $product_id ] ) ) {
 			return null;
 		}

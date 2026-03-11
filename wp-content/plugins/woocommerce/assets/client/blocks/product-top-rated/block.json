@@ -2,15 +2,16 @@
 	"name": "woocommerce/product-top-rated",
 	"title": "Top Rated Products",
 	"category": "woocommerce",
-	"keywords": [ "WooCommerce" ],
+	"keywords": [
+		"WooCommerce"
+	],
 	"description": "Display a grid of your top rated products.",
 	"supports": {
-		"interactivity": {
-			"clientNavigation": false
-		},
-		"align": [ "wide", "full" ],
-		"html": false,
-		"inserter": false
+		"align": [
+			"wide",
+			"full"
+		],
+		"html": false
 	},
 	"attributes": {
 		"columns": {

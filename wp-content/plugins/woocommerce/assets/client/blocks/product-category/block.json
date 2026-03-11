@@ -2,15 +2,16 @@
 	"name": "woocommerce/product-category",
 	"title": "Products by Category",
 	"category": "woocommerce",
-	"keywords": [ "WooCommerce" ],
+	"keywords": [
+		"WooCommerce"
+	],
 	"description": "Display a grid of products from your selected categories.",
 	"supports": {
-		"interactivity": {
-			"clientNavigation": false
-		},
-		"align": [ "wide", "full" ],
-		"html": false,
-		"inserter": false
+		"align": [
+			"wide",
+			"full"
+		],
+		"html": false
 	},
 	"attributes": {
 		"columns": {

@@ -20,12 +20,12 @@ trait ProductItemTrait {
 		$prices           = parent::prepare_product_price_response( $product, $tax_display_mode );
 
 		// Add raw prices (prices with greater precision).
-		$prices['raw_prices'] = array(
+		$prices['raw_prices'] = [
 			'precision'     => wc_get_rounding_precision(),
 			'price'         => $this->prepare_money_response( $price_function( $product ), wc_get_rounding_precision() ),
-			'regular_price' => $this->prepare_money_response( $price_function( $product, array( 'price' => $product->get_regular_price() ) ), wc_get_rounding_precision() ),
-			'sale_price'    => $this->prepare_money_response( $price_function( $product, array( 'price' => $product->get_sale_price() ) ), wc_get_rounding_precision() ),
-		);
+			'regular_price' => $this->prepare_money_response( $price_function( $product, [ 'price' => $product->get_regular_price() ] ), wc_get_rounding_precision() ),
+			'sale_price'    => $this->prepare_money_response( $price_function( $product, [ 'price' => $product->get_sale_price() ] ), wc_get_rounding_precision() ),
+		];
 
 		return $prices;
 	}
@@ -38,7 +38,7 @@ trait ProductItemTrait {
 	 * @return array
 	 */
 	protected function format_variation_data( $variation_data, $product ) {
-		$return = array();
+		$return = [];
 
 		if ( ! is_iterable( $variation_data ) ) {
 			return $return;
@@ -46,6 +46,7 @@ trait ProductItemTrait {
 
 		foreach ( $variation_data as $key => $value ) {
 			$taxonomy = wc_attribute_taxonomy_name( str_replace( 'attribute_pa_', '', urldecode( $key ) ) );
+
 			if ( taxonomy_exists( $taxonomy ) ) {
 				// If this is a term slug, get the term's nice name.
 				$term = get_term_by( 'slug', $value, $taxonomy );
@@ -54,7 +55,6 @@ trait ProductItemTrait {
 				}
 				$label = wc_attribute_label( $taxonomy );
 			} else {
-
 				/**
 				 * Filters the variation option name.
 				 *
@@ -74,11 +74,10 @@ trait ProductItemTrait {
 				$label = wc_attribute_label( str_replace( 'attribute_', '', $key ), $product );
 			}
 
-			$return[] = array(
-				'raw_attribute' => $this->prepare_html_response( $key ),
-				'attribute'     => $this->prepare_html_response( $label ),
-				'value'         => $this->prepare_html_response( $value ),
-			);
+			$return[] = [
+				'attribute' => $this->prepare_html_response( $label ),
+				'value'     => $this->prepare_html_response( $value ),
+			];
 		}
 
 		return $return;

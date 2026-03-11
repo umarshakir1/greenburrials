@@ -8,8 +8,6 @@
 
 defined( 'ABSPATH' ) || exit;
 
-use Automattic\WooCommerce\Blocks\Utils\CartCheckoutUtils;
-
 /**
  * The WooCommerce countries class stores country/state data.
  */
@@ -87,34 +85,6 @@ class WC_Countries {
 	 */
 	public function country_exists( $country_code ) {
 		return isset( $this->get_countries()[ $country_code ] );
-	}
-
-	/**
-	 * Searches for a valid ISO 3166-1 alpha-2 code using the provided alpha-3 code.
-	 *
-	 * @since 10.3.0
-	 * @param string $country_code The alpha-3 country code to search for.
-	 * @return string|null The alpha-2 country code, or null if not found.
-	 *
-	 * @throws \Exception If an error occurs while looking up the country code.
-	 */
-	public function get_country_from_alpha_3_code( $country_code ) {
-		// Validate input.
-		if ( empty( $country_code ) || ! is_string( $country_code ) ) {
-			return null;
-		}
-
-		try {
-			$data = ( new Automattic\WooCommerce\Vendor\League\ISO3166\ISO3166() )->alpha3( $country_code );
-			if ( ! isset( $data['alpha2'] ) ) {
-				throw new \Exception( 'Alpha-2 country code not found for alpha-3 code.' );
-			}
-
-			// Return the alpha-2 code.
-			return $data['alpha2'];
-		} catch ( \Exception $e ) {
-			return null;
-		}
 	}
 
 	/**
@@ -464,7 +434,7 @@ class WC_Countries {
 	 */
 	public function countries_using_vat() {
 		wc_deprecated_function( 'countries_using_vat', '4.0', 'WC_Countries::get_vat_countries' );
-		$countries = array( 'AE', 'AL', 'AR', 'AZ', 'BB', 'BH', 'BO', 'BS', 'BY', 'CL', 'CO', 'EC', 'EG', 'ET', 'FJ', 'GH', 'GM', 'GT', 'IL', 'IR', 'KN', 'KR', 'KZ', 'LK', 'MD', 'ME', 'MK', 'MN', 'MU', 'MX', 'NA', 'NG', 'NP', 'PS', 'PY', 'RS', 'RU', 'RW', 'SA', 'SV', 'TH', 'TR', 'UA', 'UY', 'UZ', 'VE', 'VN', 'ZA' );
+		$countries = array( 'AE', 'AL', 'AR', 'AZ', 'BB', 'BH', 'BO', 'BS', 'BY', 'CL', 'CO', 'EC', 'EG', 'ET', 'FJ', 'GH', 'GM', 'GT', 'IL', 'IN', 'IR', 'KN', 'KR', 'KZ', 'LK', 'MD', 'ME', 'MK', 'MN', 'MU', 'MX', 'NA', 'NG', 'NP', 'PS', 'PY', 'RS', 'RU', 'RW', 'SA', 'SV', 'TH', 'TR', 'UA', 'UY', 'UZ', 'VE', 'VN', 'ZA' );
 
 		return apply_filters( 'woocommerce_countries_using_vat', $countries );
 	}
@@ -477,7 +447,7 @@ class WC_Countries {
 	 */
 	public function get_vat_countries() {
 		$eu_countries  = $this->get_european_union_countries();
-		$vat_countries = array( 'AE', 'AL', 'AR', 'AZ', 'BB', 'BH', 'BO', 'BS', 'BY', 'CL', 'CO', 'EC', 'EG', 'ET', 'FJ', 'GB', 'GH', 'GM', 'GT', 'IL', 'IM', 'IR', 'KN', 'KR', 'KZ', 'LK', 'MC', 'MD', 'ME', 'MK', 'MN', 'MU', 'MX', 'NA', 'NG', 'NO', 'NP', 'PS', 'PY', 'RS', 'RU', 'RW', 'SA', 'SV', 'TH', 'TR', 'UA', 'UY', 'UZ', 'VE', 'VN', 'XK', 'ZA' );
+		$vat_countries = array( 'AE', 'AL', 'AR', 'AZ', 'BB', 'BH', 'BO', 'BS', 'BY', 'CL', 'CO', 'EC', 'EG', 'ET', 'FJ', 'GB', 'GH', 'GM', 'GT', 'IL', 'IM', 'IN', 'IR', 'KN', 'KR', 'KZ', 'LK', 'MC', 'MD', 'ME', 'MK', 'MN', 'MU', 'MX', 'NA', 'NG', 'NO', 'NP', 'PS', 'PY', 'RS', 'RU', 'RW', 'SA', 'SV', 'TH', 'TR', 'UA', 'UY', 'UZ', 'VE', 'VN', 'ZA' );
 
 		return apply_filters( 'woocommerce_vat_countries', array_merge( $eu_countries, $vat_countries ) );
 	}
@@ -760,7 +730,7 @@ class WC_Countries {
 
 		// If necessary, append '(optional)' to the placeholder: we don't need to worry about the
 		// label, though, as woocommerce_form_field() takes care of that.
-		if ( 'optional' === CartCheckoutUtils::get_address_2_field_visibility() ) {
+		if ( 'optional' === get_option( 'woocommerce_checkout_address_2_field', 'optional' ) ) {
 			$address_2_placeholder = __( 'Apartment, suite, unit, etc. (optional)', 'woocommerce' );
 		} else {
 			$address_2_placeholder = $address_2_label;
@@ -786,7 +756,7 @@ class WC_Countries {
 				'class'        => array( 'form-row-wide' ),
 				'autocomplete' => 'organization',
 				'priority'     => 30,
-				'required'     => 'required' === CartCheckoutUtils::get_company_field_visibility(),
+				'required'     => 'required' === get_option( 'woocommerce_checkout_company_field', 'optional' ),
 			),
 			'country'    => array(
 				'type'         => 'country',
@@ -812,7 +782,7 @@ class WC_Countries {
 				'class'        => array( 'form-row-wide', 'address-field' ),
 				'autocomplete' => 'address-line2',
 				'priority'     => 60,
-				'required'     => 'required' === CartCheckoutUtils::get_address_2_field_visibility(),
+				'required'     => 'required' === get_option( 'woocommerce_checkout_address_2_field', 'optional' ),
 			),
 			'city'       => array(
 				'label'        => __( 'Town / City', 'woocommerce' ),
@@ -840,11 +810,11 @@ class WC_Countries {
 			),
 		);
 
-		if ( 'hidden' === CartCheckoutUtils::get_company_field_visibility() ) {
+		if ( 'hidden' === get_option( 'woocommerce_checkout_company_field', 'optional' ) ) {
 			unset( $fields['company'] );
 		}
 
-		if ( 'hidden' === CartCheckoutUtils::get_address_2_field_visibility() ) {
+		if ( 'hidden' === get_option( 'woocommerce_checkout_address_2_field', 'optional' ) ) {
 			unset( $fields['address_2'] );
 		}
 
@@ -1003,17 +973,6 @@ class WC_Countries {
 							'hidden'   => true,
 						),
 					),
-					'BW' => array(
-						'postcode' => array(
-							'required' => false,
-							'hidden'   => true,
-						),
-						'state'    => array(
-							'required' => false,
-							'hidden'   => true,
-							'label'    => __( 'District', 'woocommerce' ),
-						),
-					),
 					'BZ' => array(
 						'postcode' => array(
 							'required' => false,
@@ -1078,12 +1037,6 @@ class WC_Countries {
 						),
 						'state'    => array(
 							'required' => false,
-						),
-					),
-					'CY' => array(
-						'state' => array(
-							'required' => false,
-							'hidden'   => true,
 						),
 					),
 					'CZ' => array(
@@ -1241,7 +1194,7 @@ class WC_Countries {
 					),
 					'IE' => array(
 						'postcode' => array(
-							'required' => true,
+							'required' => false,
 							'label'    => __( 'Eircode', 'woocommerce' ),
 						),
 						'state'    => array(
@@ -1743,10 +1696,10 @@ class WC_Countries {
 
 		// Add email and phone fields.
 		if ( 'billing_' === $type ) {
-			if ( 'hidden' !== CartCheckoutUtils::get_phone_field_visibility() ) {
+			if ( 'hidden' !== get_option( 'woocommerce_checkout_phone_field', 'required' ) ) {
 				$address_fields['billing_phone'] = array(
 					'label'        => __( 'Phone', 'woocommerce' ),
-					'required'     => 'required' === CartCheckoutUtils::get_phone_field_visibility(),
+					'required'     => 'required' === get_option( 'woocommerce_checkout_phone_field', 'required' ),
 					'type'         => 'tel',
 					'class'        => array( 'form-row-wide' ),
 					'validate'     => array( 'phone' ),
@@ -1760,7 +1713,7 @@ class WC_Countries {
 				'type'         => 'email',
 				'class'        => array( 'form-row-wide' ),
 				'validate'     => array( 'email' ),
-				'autocomplete' => 'email',
+				'autocomplete' => 'no' === get_option( 'woocommerce_registration_generate_username' ) ? 'email' : 'email username',
 				'priority'     => 110,
 			);
 		}

@@ -5,11 +5,13 @@
  * Categories: WooCommerce, Intro
  */
 
-$image1 = plugins_url( 'assets/images/pattern-placeholders/table-wood-house-chair-floor-window.jpg', WC_PLUGIN_FILE );
+use Automattic\WooCommerce\Blocks\AIContent\PatternsHelper;
 
-$category_title = __( 'Sit back and relax', 'woocommerce' );
-$description    = __( 'With a wide range of designer chairs to elevate your living space.', 'woocommerce' );
-$button         = __( 'Shop chairs', 'woocommerce' );
+$image1 = PatternsHelper::get_image_url( $images, 0, 'assets/images/pattern-placeholders/table-wood-house-chair-floor-window.jpg' );
+
+$category_title = $content['titles'][0]['default'] ?? '';
+$description    = $content['descriptions'][0]['default'] ?? '';
+$button         = $content['buttons'][0]['default'] ?? '';
 ?>
 
 <!-- wp:group {"metadata":{"name":"Featured Category Cover Image"}, "align":"full","style":{"spacing":{"padding":{"top":"calc( 0.5 * var(--wp--style--root--padding-right, var(--wp--custom--gap--horizontal)))","bottom":"calc( 0.5 * var(--wp--style--root--padding-right, var(--wp--custom--gap--horizontal)))","left":"var(--wp--style--root--padding-left, var(--wp--custom--gap--horizontal))","right":"var(--wp--style--root--padding-right, var(--wp--custom--gap--horizontal))"},"margin":{"top":"0","bottom":"0"}}},"layout":{"type":"constrained","justifyContent":"center"}} -->

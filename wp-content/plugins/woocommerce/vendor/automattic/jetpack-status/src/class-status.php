@@ -45,17 +45,14 @@ class Status {
 		/**
 		 * Filters Jetpack's offline mode.
 		 *
-		 * @see https://jetpack.com/support/offline-mode/
+		 * @see https://jetpack.com/support/development-mode/
+		 * @todo Update documentation ^^.
 		 *
 		 * @since 1.3.0
 		 *
 		 * @param bool $offline_mode Is Jetpack's offline mode active.
 		 */
 		$offline_mode = (bool) apply_filters( 'jetpack_offline_mode', $offline_mode );
-
-		if ( ! $offline_mode ) {
-			$offline_mode = (bool) get_option( 'jetpack_offline_mode' );
-		}
 
 		Cache::set( 'is_offline_mode', $offline_mode );
 		return $offline_mode;
@@ -329,8 +326,6 @@ class Status {
 	 *
 	 * @since-jetpack 5.8
 	 *
-	 * @deprecated since 4.0.0
-	 *
 	 * @access public
 	 * @static
 	 *
@@ -379,7 +374,7 @@ class Status {
 	public function is_coming_soon() {
 		$ret = Cache::get( 'is_coming_soon' );
 		if ( null === $ret ) {
-			$is_coming_soon = ( function_exists( 'site_is_coming_soon' ) && \site_is_coming_soon() )
+			$is_coming_soon = (bool) ( function_exists( 'site_is_coming_soon' ) && \site_is_coming_soon() )
 				|| get_option( 'wpcom_public_coming_soon' );
 
 			/**

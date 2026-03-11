@@ -16,7 +16,7 @@ use Automattic\Jetpack\Connection\Manager;
  * Disable direct access.
  */
 if ( ! defined( 'ABSPATH' ) ) {
-	exit( 0 );
+	exit;
 }
 
 if ( ! class_exists( IXR_Client::class ) ) {

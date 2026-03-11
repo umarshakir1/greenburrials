@@ -358,7 +358,7 @@ class WC_REST_Taxes_V1_Controller extends WC_REST_Controller {
 			}
 
 			// Add to data array.
-			switch ( $field ) {
+			switch ( $key ) {
 				case 'tax_rate_priority':
 				case 'tax_rate_compound':
 				case 'tax_rate_shipping':
@@ -366,7 +366,7 @@ class WC_REST_Taxes_V1_Controller extends WC_REST_Controller {
 					$data[ $field ] = absint( $request[ $key ] );
 					break;
 				case 'tax_rate_class':
-					$data[ $field ] = 'standard' !== $request[ $key ] ? $request[ $key ] : '';
+					$data[ $field ] = 'standard' !== $request['tax_rate_class'] ? $request['tax_rate_class'] : '';
 					break;
 				default:
 					$data[ $field ] = wc_clean( $request[ $key ] );

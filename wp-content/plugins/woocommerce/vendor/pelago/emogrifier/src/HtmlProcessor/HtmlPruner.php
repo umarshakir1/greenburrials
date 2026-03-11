@@ -6,12 +6,11 @@ namespace Pelago\Emogrifier\HtmlProcessor;
 
 use Pelago\Emogrifier\CssInliner;
 use Pelago\Emogrifier\Utilities\ArrayIntersector;
-use Pelago\Emogrifier\Utilities\Preg;
 
 /**
  * This class can remove things from HTML.
  */
-final class HtmlPruner extends AbstractHtmlProcessor
+class HtmlPruner extends AbstractHtmlProcessor
 {
     /**
      * We need to look for display:none, but we need to do a case-insensitive search. Since DOMDocument only
@@ -28,7 +27,7 @@ final class HtmlPruner extends AbstractHtmlProcessor
     /**
      * Removes elements that have a "display: none;" style.
      *
-     * @return $this
+     * @return self fluent interface
      */
     public function removeElementsWithDisplayNone(): self
     {
@@ -58,7 +57,7 @@ final class HtmlPruner extends AbstractHtmlProcessor
      *
      * @param array<array-key, string> $classesToKeep names of classes that should not be removed
      *
-     * @return $this
+     * @return self fluent interface
      */
     public function removeRedundantClasses(array $classesToKeep = []): self
     {
@@ -85,10 +84,9 @@ final class HtmlPruner extends AbstractHtmlProcessor
     {
         $classesToKeepIntersector = new ArrayIntersector($classesToKeep);
 
-        $preg = new Preg();
         /** @var \DOMElement $element */
         foreach ($elements as $element) {
-            $elementClasses = $preg->split('/\\s++/', \trim($element->getAttribute('class')));
+            $elementClasses = \preg_split('/\\s++/', \trim($element->getAttribute('class')));
             $elementClassesToKeep = $classesToKeepIntersector->intersectWith($elementClasses);
             if ($elementClassesToKeep !== []) {
                 $element->setAttribute('class', \implode(' ', $elementClassesToKeep));
@@ -120,17 +118,15 @@ final class HtmlPruner extends AbstractHtmlProcessor
      *
      * @param CssInliner $cssInliner object instance that performed the CSS inlining
      *
-     * @return $this
+     * @return self fluent interface
      *
      * @throws \BadMethodCallException if `inlineCss` has not first been called on `$cssInliner`
      */
     public function removeRedundantClassesAfterCssInlined(CssInliner $cssInliner): self
     {
-        $preg = new Preg();
-
         $classesToKeepAsKeys = [];
         foreach ($cssInliner->getMatchingUninlinableSelectors() as $selector) {
-            $preg->matchAll('/\\.(-?+[_a-zA-Z][\\w\\-]*+)/', $selector, $matches);
+            \preg_match_all('/\\.(-?+[_a-zA-Z][\\w\\-]*+)/', $selector, $matches);
             $classesToKeepAsKeys += \array_fill_keys($matches[1], true);
         }
 

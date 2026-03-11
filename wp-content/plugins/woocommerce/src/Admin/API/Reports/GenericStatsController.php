@@ -4,7 +4,6 @@ namespace Automattic\WooCommerce\Admin\API\Reports;
 defined( 'ABSPATH' ) || exit;
 
 use Automattic\WooCommerce\Admin\API\Reports\GenericController;
-use WP_Error;
 
 /**
  * Generic base for all stats controllers.
@@ -208,7 +207,7 @@ abstract class GenericStatsController extends GenericController {
 	/**
 	 * Get the report data.
 	 *
-	 * Prepares query params, fetches the report data from the data store,
+	 * Prepares query params, fetches the report data from the Query object,
 	 * prepares it for the response, and packs it into the convention-conforming response object.
 	 *
 	 * @override GenericController::get_items()

@@ -19,12 +19,7 @@ defined( 'ABSPATH' ) || exit;
 			?>
 			<li rel="<?php echo absint( $note->id ); ?>" class="<?php echo esc_attr( implode( ' ', $css_class ) ); ?>">
 				<div class="note_content">
-					<?php
-					$content = wp_kses_post( $note->content );
-					$content = wc_wptexturize_order_note( $content );
-					// phpcs:disable WordPress.Security.EscapeOutput.OutputNotEscaped -- the content goes through wp_kses_post above.
-					echo wpautop( $content );
-					?>
+					<?php echo wpautop( wptexturize( wp_kses_post( $note->content ) ) ); // @codingStandardsIgnoreLine ?>
 				</div>
 				<p class="meta">
 					<abbr class="exact-date" title="<?php echo esc_attr( $note->date_created->date( 'Y-m-d H:i:s' ) ); ?>">

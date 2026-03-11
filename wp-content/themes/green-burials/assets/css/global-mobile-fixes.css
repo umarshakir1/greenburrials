@@ -1,0 +1,624 @@
+@font-face {
+    font-family: "Times New Roman Custom";
+    src: url("../times.ttf") format("truetype");
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Times New Roman Custom";
+    src: url("../Times New Roman - Bold.ttf") format("truetype");
+    font-weight: bold;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* ============================================
+   GLOBAL MOBILE RESPONSIVENESS FIXES
+   ============================================ */
+
+/* 1. Global Overflow Prevention */
+html,
+body {
+    overflow-x: hidden !important;
+    width: 100% !important;
+    position: relative !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+* {
+    box-sizing: border-box !important;
+}
+
+/* 2. Header Mobile Refinements */
+@media (max-width: 768px) {
+    .mobile-header-custom {
+        width: 100% !important;
+        overflow: hidden !important;
+    }
+
+    .mobile-header-flex-wrapper {
+        gap: 10px !important;
+        padding: 0 10px !important;
+    }
+
+    .mobile-logo-wrapper {
+        width: 100px !important;
+    }
+
+    .mobile-right-column {
+        gap: 8px !important;
+    }
+
+    .mobile-search-row form {
+        height: 34px !important;
+    }
+
+    .mobile-search-input {
+        font-size: 13px !important;
+    }
+
+    .mobile-search-btn {
+        width: 28px !important;
+        height: 28px !important;
+    }
+
+    .mobile-actions-row {
+        gap: 5px !important;
+    }
+
+    .mobile-action-link {
+        padding: 3px 6px !important;
+    }
+
+    .mobile-icon-circle {
+        width: 24px !important;
+        height: 24px !important;
+        margin-right: 4px !important;
+    }
+
+    .mobile-action-label {
+        font-size: 11px !important;
+    }
+
+    .mobile-action-sub {
+        font-size: 9px !important;
+    }
+
+    .mobile-nav-inner {
+        padding: 0 10px !important;
+    }
+
+    .mobile-categories-toggle {
+        font-size: 13px !important;
+    }
+}
+
+/* 3. Footer Mobile Refinements */
+@media (max-width: 768px) {
+    .footer-grid {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 2rem !important;
+        padding: 0 0px !important;
+    }
+
+    .footer-col-logo,
+    .footer-col-resources,
+    .footer-col-contact {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    .resources-two-cols {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 1rem !important;
+    }
+
+    .footer-middle-flex {
+        flex-direction: column !important;
+        gap: 2rem !important;
+        padding: 0 1px !important;
+    }
+
+    .sitemap-image,
+    .payment-info {
+        width: 100% !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: left !important;
+        text-align: center !important;
+    }
+
+    .sitemap-image img {
+        max-width: 60px !important;
+        height: auto !important;
+    }
+
+    .footer-bottom-flex {
+        flex-direction: column !important;
+        gap: 1rem !important;
+        text-align: center !important;
+        padding: 1.5rem 15px !important;
+        align-items: center !important;
+    }
+
+    .social-icons-footer {
+        justify-content: center !important;
+    }
+}
+
+/* 4. Homepage Section Refinements */
+@media (max-width: 768px) {
+
+    /* Hero Section */
+    .hero-content-figma {
+        padding: 0 15px !important;
+    }
+
+    .hero-text-left h1 {
+        font-size: 2.2rem !important;
+    }
+
+    /* Info Boxes */
+    .info-boxes-grid {
+        grid-template-columns: 1fr !important;
+        gap: 70px !important;
+        padding: 0 15px !important;
+        margin-top: 50px !important;
+    }
+
+    .info-box-card {
+        padding-top: 60px !important;
+        margin-top: 0 !important;
+    }
+
+    /* Green Burials Section */
+    .green-burials-grid {
+        grid-template-columns: 1fr !important;
+        gap: 2rem !important;
+    }
+
+    .gb-image-left,
+    .gb-image-right {
+        display: none !important;
+        /* Hide side images on mobile for focus */
+    }
+
+    .gb-text-center {
+        padding: 0 15px !important;
+    }
+
+    /* Top Categories */
+    .category-filters {
+        overflow-x: auto !important;
+        white-space: nowrap !important;
+        padding: 10px 15px !important;
+        display: flex !important;
+        gap: 10px !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .filter-btn {
+        flex: 0 0 auto !important;
+    }
+
+    .top-categories-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 12px !important;
+        padding: 0 15px !important;
+    }
+
+    /* Best Sellers & Latest Products Carousel Fixes */
+    .carousel-wrapper,
+    .latest-carousel-wrapper {
+        overflow: hidden !important;
+        width: 100% !important;
+        padding: 10px 0 !important;
+        margin: 0 !important;
+    }
+
+    .best-sellers-carousel,
+    .latest-products-track {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        gap: 15px !important;
+        width: max-content !important;
+        /* Forces track to expand to hold all items */
+        transition: transform 0.5s ease-in-out !important;
+        padding-right: 30px !important;
+        /* Extra room at end */
+    }
+
+    .category-product-card.bestseller-card,
+    .category-product-card.latest-product-card {
+        flex: 0 0 calc(100vw - 30px) !important;
+        min-width: calc(100vw - 30px) !important;
+        width: calc(100vw - 30px) !important;
+        max-width: calc(100vw - 30px) !important;
+        margin: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Fix image sizing inside cards */
+    .category-product-image {
+        height: 200px !important;
+        width: 100% !important;
+        overflow: hidden !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background: #fff !important;
+    }
+
+    .category-product-image img {
+        width: auto !important;
+        height: 100% !important;
+        max-width: 100% !important;
+        object-fit: contain !important;
+    }
+
+    /* Dual Banners */
+    .dual-banners-grid {
+        grid-template-columns: 1fr !important;
+        gap: 1.5rem !important;
+        padding: 0 15px !important;
+    }
+
+    /* Blog Grid */
+    .latest-blog-grid {
+        grid-template-columns: 1fr !important;
+        gap: 2rem !important;
+        padding: 0 15px !important;
+    }
+
+    .blog-category-badge {
+        display: none !important;
+    }
+
+    /* Newsletter */
+    .newsletter-section-modern {
+        min-height: 550px !important;
+        display: flex !important;
+        align-items: center !important;
+        padding: 3rem 0 !important;
+    }
+
+    .newsletter-grid-modern {
+        grid-template-columns: 1fr !important;
+        padding: 0 15px !important;
+        width: 100% !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        text-align: center !important;
+    }
+
+    .newsletter-content-left {
+        width: 100% !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+    }
+
+    .newsletter-form-modern {
+        width: 100% !important;
+        max-width: 400px !important;
+        flex-direction: column !important;
+        gap: 15px !important;
+        margin: 0 auto !important;
+    }
+
+    .newsletter-form-modern input {
+        width: 100% !important;
+        border-radius: 30px !important;
+        text-align: center !important;
+    }
+
+    .btn-subscribe-modern {
+        width: 100% !important;
+        border-radius: 30px !important;
+        margin-top: 5px !important;
+    }
+
+    .newsletter-map-modern {
+        display: none !important;
+        /* Hide map on small mobile if not needed, or adjust height */
+    }
+}
+
+
+/* 5. General Page Containers */
+@media (max-width: 768px) {
+    .container {
+        padding: 0 15px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    section {
+        padding: 3rem 0 !important;
+    }
+
+    .section-title,
+    h2 {
+        font-family: 'Times New Roman', Times, serif !important;
+        font-size: 1.8rem !important;
+        text-align: center !important;
+    }
+}
+
+/* 6. Fix for Horizontal White Space */
+@media (max-width: 768px) {
+
+    .site-main,
+    #main-content {
+        overflow-x: hidden !important;
+    }
+}
+
+/* 7. Generic Page Styles */
+.page-main-container {
+    padding: 4rem 15px !important;
+    min-height: 60vh;
+}
+
+.page-header {
+    margin-bottom: 3rem;
+    text-align: center;
+}
+
+.page-title {
+    font-family: 'Times New Roman', Times, serif !important;
+    font-size: 3rem !important;
+    color: #73884D !important;
+    margin-bottom: 1rem !important;
+    text-transform: uppercase;
+}
+
+.page-header .title-divider {
+    margin: 0 auto;
+}
+
+.page-content {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: #444;
+}
+
+.page-content p {
+    margin-bottom: 1.5rem;
+}
+
+@media (max-width: 768px) {
+    .page-main-container {
+        padding: 2rem 15px !important;
+    }
+
+    .page-title {
+        font-size: 2rem !important;
+    }
+
+    .page-content {
+        font-size: 1rem;
+    }
+}
+
+/* 8. Blog Single Styles */
+.blog-single-container {
+    padding: 4rem 15px !important;
+}
+
+.blog-title {
+    font-size: 2.8rem !important;
+    color: #333 !important;
+    margin-bottom: 1rem !important;
+    text-align: center;
+}
+
+.blog-content {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: #444;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+
+.blog-content img:not(.alignleft):not(.alignright):not(.aligncenter) {
+    border-radius: 8px;
+    margin: 2rem 0;
+}
+
+
+@media (max-width: 768px) {
+    .blog-single-container {
+        padding: 2rem 15px !important;
+    }
+
+    .blog-title {
+        font-size: 1.8rem !important;
+    }
+
+    .blog-content {
+        font-size: 1rem;
+    }
+}
+
+/* 9. WooCommerce Account & Checkout Refinements */
+@media (max-width: 991px) {
+    .account-grid {
+        grid-template-columns: 1fr !important;
+        gap: 2rem !important;
+    }
+
+    .login-register-flex {
+        flex-direction: column !important;
+        gap: 2rem !important;
+    }
+
+    .account-sidebar {
+        order: 2 !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .woocommerce-checkout .col2-set {
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+    .woocommerce-checkout .col-1,
+    .woocommerce-checkout .col-2 {
+        width: 100% !important;
+        float: none !important;
+        margin-bottom: 2rem !important;
+    }
+
+    #order_review_heading,
+    #order_review {
+        width: 100% !important;
+        float: none !important;
+    }
+
+    /* Table responsiveness */
+    .woocommerce-cart-form table.shop_table,
+    .woocommerce-checkout-review-order-table {
+        display: block !important;
+        width: 100% !important;
+        overflow-x: auto !important;
+    }
+}
+
+/* 10. Final Overflow & Spacing Polish */
+@media (max-width: 768px) {
+    .site-main {
+        padding-top: 0 !important;
+    }
+
+    /* Ensure all images stay within bounds */
+    img {
+        max-width: 100% !important;
+        height: auto !important;
+    }
+
+    /* Fix for potential white space from absolute elements */
+    .heading-overlay-img,
+    .section-decoration,
+    .section-decoration-white {
+        max-width: 100% !important;
+        overflow: hidden !important;
+    }
+}
+
+/* 11. Shop & Category Page Refinements */
+@media (max-width: 991px) {
+    .shop-grid-container {
+        grid-template-columns: 1fr !important;
+        gap: 2rem !important;
+    }
+
+    .shop-sidebar {
+        display: none !important;
+        /* Usually hidden on mobile or moved to a drawer */
+    }
+
+    .shop-sidebar.active {
+        display: block !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .shop-header-section {
+        padding: 2rem 0 !important;
+    }
+
+    .shop-title {
+        font-size: 2rem !important;
+    }
+
+    .products.columns-3,
+    .products.columns-4 {
+        grid-template-columns: 1fr !important;
+        gap: 30px !important;
+    }
+}
+
+@media (max-width: 480px) {
+
+    .products.columns-3,
+    .products.columns-4 {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* FORCE LOCAL FONT */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.woocommerce-loop-product__title,
+.product-title,
+.blog-title,
+.price,
+.button,
+button {
+    font-family: 'Times New Roman Custom', 'Times New Roman', Times, serif !important;
+}
+
+/* My Account & Lost Password Mobile Fixes */
+@media (max-width: 768px) {
+
+    .woocommerce-account .u-columns.col2-set,
+    .woocommerce-account .col-1,
+    .woocommerce-account .col-2 {
+        padding-left: 5px !important;
+        padding-right: 5px !important;
+    }
+
+    .woocommerce-ResetPassword {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 10px 0 !important;
+        padding: 15px !important;
+        background: #fff;
+        border: 1px solid #eee;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .lost-password-card {
+        margin: 0 !important;
+        border-radius: 4px !important;
+        width: 100% !important;
+    }
+
+    .lost-password-card .card-title {
+        font-size: 1.2rem !important;
+        padding: 12px 15px !important;
+        white-space: normal !important;
+    }
+
+    .input-button-group .woocommerce-Input {
+        min-width: 0 !important;
+        width: 100% !important;
+        flex: 1 1 auto !important;
+    }
+
+    .lost-password-message {
+        font-size: 14px !important;
+        margin-bottom: 20px !important;
+    }
+
+    .account-page-wrapper {
+        padding-top: 20px !important;
+        padding-bottom: 40px !important;
+        overflow-x: hidden !important;
+    }
+}

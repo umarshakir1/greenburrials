@@ -5,9 +5,6 @@
  * @package WooCommerce\Emails
  */
 
-use Automattic\WooCommerce\Internal\EmailEditor\BlockEmailRenderer;
-use Automattic\WooCommerce\Internal\EmailEditor\TransactionalEmailPersonalizer;
-use Automattic\WooCommerce\Utilities\FeaturesUtil;
 use Pelago\Emogrifier\CssInliner;
 use Pelago\Emogrifier\HtmlProcessor\CssToAttributeConverter;
 use Pelago\Emogrifier\HtmlProcessor\HtmlPruner;
@@ -109,20 +106,6 @@ class WC_Email extends WC_Settings_API {
 	public $recipient;
 
 	/**
-	 * Cc recipients for the email.
-	 *
-	 * @var string
-	 */
-	public $cc;
-
-	/**
-	 * Bcc recipients for the email.
-	 *
-	 * @var string
-	 */
-	public $bcc;
-
-	/**
 	 * Object this email is for, for example a customer, product, or email.
 	 *
 	 * @var object|bool
@@ -163,13 +146,6 @@ class WC_Email extends WC_Settings_API {
 	 * @var bool
 	 */
 	protected $customer_email = false;
-
-	/**
-	 * Email group slug.
-	 *
-	 * @var string
-	 */
-	public $email_group = '';
 
 	/**
 	 *  List of preg* regular expression patterns to search for,
@@ -234,7 +210,7 @@ class WC_Email extends WC_Settings_API {
 	 *
 	 * @var array
 	 */
-	public $placeholders = array();
+	protected $placeholders = array();
 
 	/**
 	 * Strings to find in subjects/headings.
@@ -260,49 +236,15 @@ class WC_Email extends WC_Settings_API {
 	public $email_type;
 
 	/**
-	 * Whether email improvements feature is enabled.
-	 *
-	 * @var bool
-	 */
-	public $email_improvements_enabled;
-
-	/**
-	 * Whether email block editor feature is enabled.
-	 *
-	 * @var bool
-	 */
-	public $block_email_editor_enabled;
-
-
-
-	/**
-	 * Personalizer instance for converting Personalization tags.
-	 *
-	 * @var TransactionalEmailPersonalizer
-	 */
-	public $personalizer;
-
-	/**
-	 * Block content template path.
-	 *
-	 * @var string
-	 */
-	public $template_block_content = 'emails/block/general-block-email.php';
-
-	/**
 	 * Constructor.
 	 */
 	public function __construct() {
-		$this->email_improvements_enabled = FeaturesUtil::feature_is_enabled( 'email_improvements' );
-		$this->block_email_editor_enabled = FeaturesUtil::feature_is_enabled( 'block_email_editor' );
-
 		// Find/replace.
 		$this->placeholders = array_merge(
 			array(
 				'{site_title}'   => $this->get_blogname(),
 				'{site_address}' => wp_parse_url( home_url(), PHP_URL_HOST ),
 				'{site_url}'     => wp_parse_url( home_url(), PHP_URL_HOST ),
-				'{store_email}'  => $this->get_from_address(),
 			),
 			$this->placeholders
 		);
@@ -318,19 +260,9 @@ class WC_Email extends WC_Settings_API {
 
 		$this->email_type = $this->get_option( 'email_type' );
 		$this->enabled    = $this->get_option( 'enabled' );
-		if ( FeaturesUtil::feature_is_enabled( 'email_improvements' ) ) {
-			$this->cc  = $this->get_option( 'cc', '' );
-			$this->bcc = $this->get_option( 'bcc', '' );
-		}
 
-		if ( $this->block_email_editor_enabled ) {
-			$this->personalizer = wc_get_container()->get( TransactionalEmailPersonalizer::class );
-		}
 		add_action( 'phpmailer_init', array( $this, 'handle_multipart' ) );
 		add_action( 'woocommerce_update_options_email_' . $this->id, array( $this, 'process_admin_options' ) );
-
-		// Use priority 1 to ensure our skip classes are added before lazy loading plugins process the images.
-		add_filter( 'wp_get_attachment_image_attributes', array( $this, 'prevent_lazy_loading_on_attachment' ), 1, 1 );
 	}
 
 	/**
@@ -437,51 +369,6 @@ class WC_Email extends WC_Settings_API {
 	}
 
 	/**
-	 * Get available email groups with their titles.
-	 *
-	 * @since 10.3.0
-	 * @return array Associative array of email group slugs => titles.
-	 */
-	public function get_email_groups() {
-		$email_groups = array(
-			'accounts'         => __( 'Accounts', 'woocommerce' ),
-			'orders'           => __( 'Orders', 'woocommerce' ),
-			'order-processing' => __( 'Order processing', 'woocommerce' ),
-			'order-exceptions' => __( 'Order exceptions', 'woocommerce' ),
-			'payments'         => __( 'Payments', 'woocommerce' ),
-		);
-
-		/**
-		 * Filter the available email groups.
-		 *
-		 * @since 10.3.0
-		 * @param array $email_groups Associative array of email group slugs => titles.
-		 */
-		return apply_filters( 'woocommerce_email_groups', $email_groups );
-	}
-
-	/**
-	 * Get the title for the current email group.
-	 *
-	 * @since 10.3.0
-	 * @return string The email group title. Falls back to the email group slug if not found.
-	 */
-	public function get_email_group_title() {
-		$email_groups = $this->get_email_groups();
-		$title        = isset( $email_groups[ $this->email_group ] ) ? $email_groups[ $this->email_group ] : $this->email_group;
-
-		/**
-		 * Filter the email group title.
-		 *
-		 * @since 10.3.0
-		 * @param string $title The email group title.
-		 * @param string $email_group The email group slug.
-		 * @param array $email_groups Associative array of email group slugs => titles.
-		 */
-		return (string) apply_filters( 'woocommerce_email_group_title', $title, $this->email_group, $email_groups );
-	}
-
-	/**
 	 * Get email subject.
 	 *
 	 * @since  3.1.0
@@ -529,7 +416,7 @@ class WC_Email extends WC_Settings_API {
 		 * @param object|bool $object             The object (ie, product or order) this email relates to, if any.
 		 * @param WC_Email    $email              WC_Email instance managing the email.
 		 */
-		return apply_filters( 'woocommerce_email_additional_content_' . $this->id, $this->format_string( $this->get_option_or_transient( 'additional_content' ) ), $this->object, $this );
+		return apply_filters( 'woocommerce_email_additional_content_' . $this->id, $this->format_string( $this->get_option( 'additional_content' ) ), $this->object, $this );
 	}
 
 	/**
@@ -538,45 +425,7 @@ class WC_Email extends WC_Settings_API {
 	 * @return string
 	 */
 	public function get_subject() {
-		/**
-		 * Provides an opportunity to inspect and modify subject for the email.
-		 *
-		 * @since 2.0.0
-		 *
-		 * @param string      $subject Subject of the email.
-		 * @param object|bool $object  The object (ie, product or order) this email relates to, if any.
-		 * @param WC_Email    $email   WC_Email instance managing the email.
-		 */
-		$subject = apply_filters( 'woocommerce_email_subject_' . $this->id, $this->format_string( $this->get_option_or_transient( 'subject', $this->get_default_subject() ) ), $this->object, $this );
-		if ( $this->block_email_editor_enabled ) {
-			// Because the new email editor uses rich-text component for subject editing, to be ensure that the subject is always in plain text, we need to strip all tags.
-			$subject = wp_strip_all_tags( $this->personalizer->personalize_transactional_content( $subject, $this ) );
-		}
-		return $subject;
-	}
-
-
-
-	/**
-	 * Get email preheader.
-	 *
-	 * @return string
-	 */
-	public function get_preheader() {
-		/**
-		 * Provides an opportunity to inspect and modify preheader for the email.
-		 *
-		 * @since 9.9.0
-		 *
-		 * @param string      $preheader Preheader of the email.
-		 * @param object|bool $object  The object (ie, product or order) this email relates to, if any.
-		 * @param WC_Email    $email   WC_Email instance managing the email.
-		 */
-		$preheader = apply_filters( 'woocommerce_email_preheader' . $this->id, $this->format_string( $this->get_option_or_transient( 'preheader', '' ) ), $this->object, $this );
-		if ( $this->block_email_editor_enabled ) {
-			$preheader = $this->personalizer->personalize_transactional_content( $preheader, $this );
-		}
-		return $preheader;
+		return apply_filters( 'woocommerce_email_subject_' . $this->id, $this->format_string( $this->get_option( 'subject', $this->get_default_subject() ) ), $this->object, $this );
 	}
 
 	/**
@@ -585,16 +434,7 @@ class WC_Email extends WC_Settings_API {
 	 * @return string
 	 */
 	public function get_heading() {
-		/**
-		 * Provides an opportunity to inspect and modify heading for the email.
-		 *
-		 * @since 2.0.0
-		 *
-		 * @param string      $heading Heading to be added to the email.
-		 * @param object|bool $object  The object (ie, product or order) this email relates to, if any.
-		 * @param WC_Email    $email   WC_Email instance managing the email.
-		 */
-		return apply_filters( 'woocommerce_email_heading_' . $this->id, $this->format_string( $this->get_option_or_transient( 'heading', $this->get_default_heading() ) ), $this->object, $this );
+		return apply_filters( 'woocommerce_email_heading_' . $this->id, $this->format_string( $this->get_option( 'heading', $this->get_default_heading() ) ), $this->object, $this );
 	}
 
 	/**
@@ -603,61 +443,10 @@ class WC_Email extends WC_Settings_API {
 	 * @return string
 	 */
 	public function get_recipient() {
-		/**
-		 * Filter the recipient for the email.
-		 *
-		 * @since 2.0.0
-		 * @since 3.7.0 Added $email parameter.
-		 * @param string   $recipient Recipient.
-		 * @param object   $object    The object (ie, product or order) this email relates to, if any.
-		 * @param WC_Email $email     WC_Email instance managing the email.
-		 */
 		$recipient  = apply_filters( 'woocommerce_email_recipient_' . $this->id, $this->recipient, $this->object, $this );
-		$recipients = array_map( 'trim', explode( ',', $recipient ?? '' ) );
+		$recipients = array_map( 'trim', explode( ',', $recipient ) );
 		$recipients = array_filter( $recipients, 'is_email' );
 		return implode( ', ', $recipients );
-	}
-
-	/**
-	 * Get valid Cc recipients.
-	 *
-	 * @return string
-	 */
-	public function get_cc_recipient() {
-		/**
-		 * Filter the Cc recipient for the email.
-		 *
-		 * @since 9.8.0
-		 * @param string   $cc     Cc recipient.
-		 * @param object   $object The object (ie, product or order) this email relates to, if any.
-		 * @param WC_Email $email  WC_Email instance managing the email.
-		 */
-		$cc  = apply_filters( 'woocommerce_email_cc_recipient_' . $this->id, $this->cc, $this->object, $this );
-		$ccs = array_map( 'trim', explode( ',', $cc ?? '' ) );
-		$ccs = array_filter( $ccs, 'is_email' );
-		$ccs = array_map( 'sanitize_email', $ccs );
-		return implode( ', ', $ccs );
-	}
-
-	/**
-	 * Get valid Bcc recipients.
-	 *
-	 * @return string
-	 */
-	public function get_bcc_recipient() {
-		/**
-		 * Filter the Bcc recipient for the email.
-		 *
-		 * @since 9.8.0
-		 * @param string   $bcc    Bcc recipient.
-		 * @param object   $object The object (ie, product or order) this email relates to, if any.
-		 * @param WC_Email $email  WC_Email instance managing the email.
-		 */
-		$bcc  = apply_filters( 'woocommerce_email_bcc_recipient_' . $this->id, $this->bcc, $this->object, $this );
-		$bccs = array_map( 'trim', explode( ',', $bcc ?? '' ) );
-		$bccs = array_filter( $bccs, 'is_email' );
-		$bccs = array_map( 'sanitize_email', $bccs );
-		return implode( ', ', $bccs );
 	}
 
 	/**
@@ -674,18 +463,6 @@ class WC_Email extends WC_Settings_API {
 			}
 		} elseif ( $this->get_from_address() && $this->get_from_name() ) {
 			$header .= 'Reply-to: ' . $this->get_from_name() . ' <' . $this->get_from_address() . ">\r\n";
-		}
-
-		if ( FeaturesUtil::feature_is_enabled( 'email_improvements' ) ) {
-			$cc = $this->get_cc_recipient();
-			if ( ! empty( $cc ) ) {
-				$header .= 'Cc: ' . sanitize_text_field( $cc ) . "\r\n";
-			}
-
-			$bcc = $this->get_bcc_recipient();
-			if ( ! empty( $bcc ) ) {
-				$header .= 'Bcc: ' . sanitize_text_field( $bcc ) . "\r\n";
-			}
 		}
 
 		return apply_filters( 'woocommerce_email_headers', $header, $this->id, $this->object, $this );
@@ -706,37 +483,7 @@ class WC_Email extends WC_Settings_API {
 	 * @return string
 	 */
 	public function get_email_type() {
-		$email_type = $this->email_type;
-		/**
-		 * This filter is documented in templates/emails/email-styles.php
-		 *
-		 * @since 9.6.0
-		 * @param bool $is_email_preview Whether the email is being previewed.
-		 */
-		$is_email_preview = apply_filters( 'woocommerce_is_email_preview', false );
-		// Transient is used for live email preview without saving the settings.
-		if ( $is_email_preview ) {
-			$transient  = get_transient( "woocommerce_{$this->id}_email_type" );
-			$email_type = $transient ? $transient : $email_type;
-		}
-		return $email_type && class_exists( 'DOMDocument' ) ? $email_type : 'plain';
-	}
-
-	/**
-	 * Get block editor email template content.
-	 *
-	 * @return string
-	 */
-	public function get_block_editor_email_template_content() {
-		return wc_get_template_html(
-			$this->template_block_content,
-			array(
-				'order'         => $this->object,
-				'sent_to_admin' => false,
-				'plain_text'    => false,
-				'email'         => $this,
-			)
-		);
+		return $this->email_type && class_exists( 'DOMDocument' ) ? $this->email_type : 'plain';
 	}
 
 	/**
@@ -835,12 +582,6 @@ class WC_Email extends WC_Settings_API {
 	public function get_content() {
 		$this->sending = true;
 
-		$block_email_content = $this->get_block_email_html_content();
-		if ( $block_email_content ) {
-			$this->email_type = 'plain' === $this->email_type ? 'html' : $this->email_type;
-			return $block_email_content;
-		}
-
 		if ( 'plain' === $this->get_email_type() ) {
 			$email_content = wordwrap( preg_replace( $this->plain_search, $this->plain_replace, wp_strip_all_tags( $this->get_content_plain() ) ), 70 );
 		} else {
@@ -853,94 +594,53 @@ class WC_Email extends WC_Settings_API {
 	/**
 	 * Apply inline styles to dynamic content.
 	 *
-	 * We only inline CSS for html emails.
+	 * We only inline CSS for html emails, and to do so we use Emogrifier library (if supported).
 	 *
-	 * @version 10.2.0
+	 * @version 4.0.0
 	 * @param string|null $content Content that will receive inline styles.
 	 * @return string
 	 */
 	public function style_inline( $content ) {
 		if ( in_array( $this->get_content_type(), array( 'text/html', 'multipart/alternative' ), true ) ) {
+			$css  = '';
+			$css .= $this->get_must_use_css_styles();
+			$css .= "\n";
+
+			ob_start();
+			wc_get_template( 'emails/email-styles.php' );
+			$css .= ob_get_clean();
+
 			/**
-			 * Filter to allow the ability to override the email inline styling method.
+			 * Provides an opportunity to filter the CSS styles included in e-mails.
 			 *
-			 * @since 10.2.0
+			 * @since 2.3.0
 			 *
-			 * @param callable $style_inline_callback The default email inline styling callback.
-			 * @param string|null $content Content that will receive inline styles.
-			 * @param WC_Email $this The WC_Email object.
+			 * @param string    $css   CSS code.
+			 * @param \WC_Email $email E-mail instance.
 			 */
-			$style_inline_callback = apply_filters( 'woocommerce_mail_style_inline_callback', array( $this, 'apply_inline_style' ), $content, $this );
+			$css = apply_filters( 'woocommerce_email_styles', $css, $this );
 
-			if ( ! is_callable( $style_inline_callback ) ) {
-				$style_inline_callback = array( $this, 'apply_inline_style' );
-			}
+			$css_inliner_class = CssInliner::class;
 
-			return call_user_func( $style_inline_callback, $content );
-		}
+			if ( $this->supports_emogrifier() && class_exists( $css_inliner_class ) ) {
+				try {
+					$css_inliner = CssInliner::fromHtml( $content )->inlineCss( $css );
 
-		return $content;
-	}
+					do_action( 'woocommerce_emogrifier', $css_inliner, $this );
 
+					$dom_document = $css_inliner->getDomDocument();
 
-	/**
-	 * Apply inline styles to dynamic content using Emogrifier library (if supported).
-	 *
-	 * @since 10.2.0
-	 * @param string|null $content Content that will receive inline styles.
-	 * @return string
-	 */
-	private function apply_inline_style( $content ) {
-		$css  = '';
-		$css .= $this->get_must_use_css_styles();
-		$css .= "\n";
-
-		ob_start();
-		wc_get_template( 'emails/email-styles.php' );
-		$css .= ob_get_clean();
-
-		/**
-		 * Provides an opportunity to filter the CSS styles included in e-mails.
-		 *
-		 * @since 2.3.0
-		 *
-		 * @param string    $css   CSS code.
-		 * @param \WC_Email $email E-mail instance.
-		 */
-		$css = apply_filters( 'woocommerce_email_styles', $css, $this );
-
-		$css_inliner_class = CssInliner::class;
-
-		if ( $this->supports_emogrifier() && class_exists( $css_inliner_class ) ) {
-			try {
-				$css_inliner = CssInliner::fromHtml( $content )->inlineCss( $css );
-
-				/**
-				 * Action hook fired when an email content has been processed by Emogrifier CssInliner instance.
-				 *
-				 * @since 4.1.0
-				 *
-				 * @param CssInliner $css_inliner CssInliner instance.
-				 * @param WC_Email $this WC_Email instance.
-				 */
-				do_action( 'woocommerce_emogrifier', $css_inliner, $this );
-
-				$dom_document = $css_inliner->getDomDocument();
-
-				// When the email is rendered in the block editor, we don't want to remove the elements with display: none.
-				// The main reason is using preview text in the email body which is hidden by default.
-				if ( ! $this->block_email_editor_enabled ) {
 					HtmlPruner::fromDomDocument( $dom_document )->removeElementsWithDisplayNone();
+					$content = CssToAttributeConverter::fromDomDocument( $dom_document )
+						->convertCssToVisualAttributes()
+						->render();
+				} catch ( Exception $e ) {
+					$logger = wc_get_logger();
+					$logger->error( $e->getMessage(), array( 'source' => 'emogrifier' ) );
 				}
-				$content = CssToAttributeConverter::fromDomDocument( $dom_document )
-					->convertCssToVisualAttributes()
-					->render();
-			} catch ( Exception $e ) {
-				$logger = wc_get_logger();
-				$logger->error( $e->getMessage(), array( 'source' => 'emogrifier' ) );
+			} else {
+				$content = '<style type="text/css">' . $css . '</style>' . $content;
 			}
-		} else {
-			$content = '<style type="text/css">' . $css . '</style>' . $content;
 		}
 
 		return $content;
@@ -1021,16 +721,6 @@ class WC_Email extends WC_Settings_API {
 	}
 
 	/**
-	 * Set the object for the outgoing email.
-	 *
-	 * @param object $object Object this email is for, e.g. customer, or product.
-	 * @return void
-	 */
-	public function set_object( $object ) { // phpcs:ignore Universal.NamingConventions.NoReservedKeywordParameterNames.objectFound
-		$this->object = $object;
-	}
-
-	/**
 	 * Send an email.
 	 *
 	 * @param string $to Email to.
@@ -1062,10 +752,10 @@ class WC_Email extends WC_Settings_API {
 		 *
 		 * @since 5.6.0
 		 * @param bool     $return Whether the email was sent successfully.
-		 * @param string   $id     Email ID.
+		 * @param int      $id     Email ID.
 		 * @param WC_Email $this   WC_Email instance.
 		 */
-		do_action( 'woocommerce_email_sent', $return, (string) $this->id, $this );
+		do_action( 'woocommerce_email_sent', $return, $this->id, $this );
 
 		return $return;
 	}
@@ -1117,44 +807,6 @@ class WC_Email extends WC_Settings_API {
 				'options'     => $this->get_email_type_options(),
 				'desc_tip'    => true,
 			),
-		);
-		if ( FeaturesUtil::feature_is_enabled( 'email_improvements' ) ) {
-			$this->form_fields['cc']  = $this->get_cc_field();
-			$this->form_fields['bcc'] = $this->get_bcc_field();
-		}
-	}
-
-	/**
-	 * Get the cc field definition.
-	 *
-	 * @return array
-	 */
-	protected function get_cc_field() {
-		return array(
-			'title'       => __( 'Cc(s)', 'woocommerce' ),
-			'type'        => 'text',
-			/* translators: %s: admin email */
-			'description' => __( 'Enter Cc recipients (comma-separated) for this email.', 'woocommerce' ),
-			'placeholder' => '',
-			'default'     => '',
-			'desc_tip'    => true,
-		);
-	}
-
-	/**
-	 * Get the bcc field definition.
-	 *
-	 * @return array
-	 */
-	protected function get_bcc_field() {
-		return array(
-			'title'       => __( 'Bcc(s)', 'woocommerce' ),
-			'type'        => 'text',
-			/* translators: %s: admin email */
-			'description' => __( 'Enter Bcc recipients (comma-separated) for this email.', 'woocommerce' ),
-			'placeholder' => '',
-			'default'     => '',
-			'desc_tip'    => true,
 		);
 	}
 
@@ -1237,7 +889,6 @@ class WC_Email extends WC_Settings_API {
 				wp_safe_redirect( $redirect );
 				exit;
 			}
-			wc_clear_template_cache();
 		}
 	}
 
@@ -1279,7 +930,6 @@ class WC_Email extends WC_Settings_API {
 				 */
 				do_action( 'woocommerce_copy_email_template', $template_type, $this );
 
-				wc_clear_template_cache();
 				?>
 				<div class="updated">
 					<p><?php echo esc_html__( 'Template file copied to theme.', 'woocommerce' ); ?></p>
@@ -1311,8 +961,6 @@ class WC_Email extends WC_Settings_API {
 					 * @param string $email The email object
 					 */
 					do_action( 'woocommerce_delete_email_template', $template_type, $this );
-
-					wc_clear_template_cache();
 					?>
 					<div class="updated">
 						<p><?php echo esc_html__( 'Template file deleted from theme.', 'woocommerce' ); ?></p>
@@ -1363,7 +1011,7 @@ class WC_Email extends WC_Settings_API {
 		// Do admin actions.
 		$this->admin_actions();
 		?>
-		<?php wc_back_header( $this->get_title(), __( 'Return to emails', 'woocommerce' ), admin_url( 'admin.php?page=wc-settings&tab=email' ) ); ?>
+		<h2><?php echo esc_html( $this->get_title() ); ?> <?php wc_back_link( __( 'Return to emails', 'woocommerce' ), admin_url( 'admin.php?page=wc-settings&tab=email' ) ); ?></h2>
 
 		<?php echo wpautop( wp_kses_post( $this->get_description() ) ); // phpcs:ignore WordPress.XSS.EscapeOutput.OutputNotEscaped ?>
 
@@ -1540,82 +1188,5 @@ class WC_Email extends WC_Settings_API {
 		if ( $phpmailer instanceof PHPMailer\PHPMailer\PHPMailer ) {
 			$phpmailer->AltBody = ''; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
 		}
-	}
-
-	/**
-	 * Get an option or transient for email preview.
-	 *
-	 * @param string $key Option key.
-	 * @param mixed  $empty_value Value to use when option is empty.
-	 */
-	protected function get_option_or_transient( string $key, $empty_value = null ) {
-		$option = $this->get_option( $key, $empty_value );
-
-		/**
-		 * This filter is documented in templates/emails/email-styles.php
-		 *
-		 * @since 9.6.0
-		 * @param bool $is_email_preview Whether the email is being previewed.
-		 */
-		$is_email_preview = apply_filters( 'woocommerce_is_email_preview', false );
-		if ( $is_email_preview ) {
-			$plugin_id = $this->plugin_id;
-			$email_id  = $this->id;
-			$transient = get_transient( "{$plugin_id}{$email_id}_{$key}" );
-			if ( false !== $transient ) {
-				$option = $transient ? $transient : $empty_value;
-			}
-		}
-
-		return $option;
-	}
-
-	/**
-	 * Gerenerates the HTML content for the email from a block based email.
-	 * and if so, it renders the block email content.
-	 *
-	 * @return string|null
-	 */
-	private function get_block_email_html_content(): ?string {
-		if ( ! $this->block_email_editor_enabled ) {
-			return null;
-		}
-
-		/** Service for rendering emails from block content @var BlockEmailRenderer $renderer */
-		$renderer = wc_get_container()->get( BlockEmailRenderer::class );
-		return $renderer->maybe_render_block_email( $this );
-	}
-
-	/**
-	 * Prevent lazy loading on attachment images in email context by adding skip classes.
-	 * This is hooked into the wp_get_attachment_image_attributes filter.
-	 *
-	 * @param array $attributes The image attributes array.
-	 * @return array The modified image attributes array.
-	 */
-	public function prevent_lazy_loading_on_attachment( $attributes ) {
-		// Only process if we're currently sending an email.
-		if ( ! $this->sending ) {
-			return $attributes;
-		}
-
-		// Skip classes to prevent lazy loading plugins from applying lazy loading.
-		// These are the most common skip classes used by popular lazy loading plugins.
-		$skip_classes = array( 'skip-lazy', 'no-lazyload', 'lazyload-disabled', 'no-lazy', 'skip-lazyload' );
-
-		// Add skip classes to prevent lazy loading plugins from applying lazy loading.
-		if ( isset( $attributes['class'] ) ) {
-			$classes             = array_filter( array_map( 'trim', explode( ' ', $attributes['class'] ) ) );
-			$classes             = array_unique( array_merge( $classes, $skip_classes ) );
-			$attributes['class'] = implode( ' ', $classes );
-		} else {
-			// No class attribute exists, add one with skip classes.
-			$attributes['class'] = implode( ' ', $skip_classes );
-		}
-
-		// Add data-skip-lazy attribute as an additional safeguard.
-		$attributes['data-skip-lazy'] = 'true';
-
-		return $attributes;
 	}
 }

@@ -32,13 +32,6 @@ class WC_Settings_Products extends WC_Settings_Page {
 	}
 
 	/**
-	 * Setting page icon.
-	 *
-	 * @var string
-	 */
-	public $icon = 'box';
-
-	/**
 	 * Get own sections.
 	 *
 	 * @return array
@@ -57,10 +50,6 @@ class WC_Settings_Products extends WC_Settings_Page {
 	 * @return array
 	 */
 	protected function get_settings_for_default_section() {
-		$locale_info            = include WC()->plugin_path() . '/i18n/locale-info.php';
-		$default_weight_unit    = $locale_info['US']['weight_unit'];
-		$default_dimension_unit = $locale_info['US']['dimension_unit'];
-
 		$settings =
 			array(
 				array(
@@ -122,7 +111,7 @@ class WC_Settings_Products extends WC_Settings_Page {
 					'id'       => 'woocommerce_weight_unit',
 					'class'    => 'wc-enhanced-select',
 					'css'      => 'min-width:300px;',
-					'default'  => $default_weight_unit,
+					'default'  => 'kg',
 					'type'     => 'select',
 					'options'  => array(
 						'kg'  => I18nUtil::get_weight_unit_label( 'kg' ),
@@ -139,7 +128,7 @@ class WC_Settings_Products extends WC_Settings_Page {
 					'id'       => 'woocommerce_dimension_unit',
 					'class'    => 'wc-enhanced-select',
 					'css'      => 'min-width:300px;',
-					'default'  => $default_dimension_unit,
+					'default'  => 'cm',
 					'type'     => 'select',
 					'options'  => array(
 						'm'  => I18nUtil::get_dimensions_unit_label( 'm' ),
@@ -490,7 +479,7 @@ class WC_Settings_Products extends WC_Settings_Page {
 		 * Product->Inventory has a setting `Out of stock visibility`.
 		 * Because of this, we need to recount the terms to keep them in-sync.
 		 */
-		WC()->call_function( 'wc_recount_all_terms', false );
+		WC()->call_function( 'wc_recount_all_terms' );
 
 		$this->do_update_options_action();
 	}

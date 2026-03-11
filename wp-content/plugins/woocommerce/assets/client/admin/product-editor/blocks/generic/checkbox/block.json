@@ -5,12 +5,16 @@
     "title": "Product checkbox control",
     "category": "woocommerce",
     "description": "A reusable checkbox for the product editor.",
-    "keywords": ["products", "checkbox", "input"],
+    "keywords": [
+        "products",
+        "checkbox",
+        "input"
+    ],
     "textdomain": "default",
     "attributes": {
         "title": {
             "type": "string",
-            "role": "content"
+            "__experimentalRole": "content"
         },
         "label": {
             "type": "string"
@@ -37,5 +41,8 @@
         "lock": false,
         "__experimentalToolbar": false
     },
-    "usesContext": ["postType"]
+    "editorStyle": "file:./editor.css",
+    "usesContext": [
+        "postType"
+    ]
 }

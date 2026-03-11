@@ -1,8 +1,7 @@
 <?php
-declare( strict_types=1 );
+
 namespace Automattic\WooCommerce\Blocks\Templates;
 
-use Automattic\WooCommerce\Blocks\Templates\ArchiveProductTemplatesCompatibility;
 use Automattic\WooCommerce\Blocks\Utils\BlockTemplateUtils;
 
 /**
@@ -10,7 +9,7 @@ use Automattic\WooCommerce\Blocks\Utils\BlockTemplateUtils;
  *
  * @internal
  */
-class ProductTagTemplate extends AbstractTemplateWithFallback {
+class ProductTagTemplate extends AbstractTemplate {
 
 	/**
 	 * The slug of the template.
@@ -24,14 +23,14 @@ class ProductTagTemplate extends AbstractTemplateWithFallback {
 	 *
 	 * @var string
 	 */
-	public string $fallback_template = ProductCatalogTemplate::SLUG;
+	public $fallback_template = ProductCatalogTemplate::SLUG;
 
 	/**
-	 * Whether this is a taxonomy template.
-	 *
-	 * @var bool
+	 * Initialization method.
 	 */
-	public bool $is_taxonomy_template = true;
+	public function init() {
+		add_action( 'template_redirect', array( $this, 'render_block_template' ) );
+	}
 
 	/**
 	 * Returns the title of the template.
@@ -56,9 +55,6 @@ class ProductTagTemplate extends AbstractTemplateWithFallback {
 	 */
 	public function render_block_template() {
 		if ( ! is_embed() && is_product_taxonomy() && is_tax( 'product_tag' ) ) {
-			$compatibility_layer = new ArchiveProductTemplatesCompatibility();
-			$compatibility_layer->init();
-
 			$templates = get_block_templates( array( 'slug__in' => array( self::SLUG ) ) );
 
 			if ( isset( $templates[0] ) && BlockTemplateUtils::template_has_legacy_template_block( $templates[0] ) ) {

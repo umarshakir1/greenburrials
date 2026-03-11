@@ -6,12 +6,11 @@
 namespace Automattic\WooCommerce\Internal\Admin;
 
 use Automattic\WooCommerce\Admin\API\Plugins;
-use Automattic\WooCommerce\Admin\API\Reports\Orders\DataStore as OrdersDataStore;
-use Automattic\WooCommerce\Admin\Features\Features;
 use Automattic\WooCommerce\Admin\PageController;
+use Automattic\WooCommerce\Admin\API\Reports\Orders\DataStore as OrdersDataStore;
 use Automattic\WooCommerce\Admin\PluginsHelper;
+use Automattic\WooCommerce\Internal\Admin\WCPayPromotion\Init as WCPayPromotionInit;
 use Automattic\WooCommerce\Utilities\FeaturesUtil;
-use Automattic\WooCommerce\Utilities\OrderUtil;
 use WC_Marketplace_Suggestions;
 
 /**
@@ -79,7 +78,7 @@ class Settings {
 	}
 
 	/**
-	 * Return an object defining the currency options for the site's current currency
+	 * Return an object defining the currecy options for the site's current currency
 	 *
 	 * @return  array  Settings for the current currency {
 	 *     Array of settings.
@@ -92,11 +91,7 @@ class Settings {
 	public static function get_currency_settings() {
 		$code = get_woocommerce_currency();
 
-		/**
-		 * The wc_currency_settings hook
-		 *
-		 * @since 6.5.0
-		 */
+		//phpcs:ignore
 		return apply_filters(
 			'wc_currency_settings',
 			array(
@@ -175,7 +170,13 @@ class Settings {
 			}
 		}
 
-		$settings['currentUserData']      = WCAdminUser::get_user_data();
+		$user_controller = new \WP_REST_Users_Controller();
+		$request         = new \WP_REST_Request();
+		$request->set_query_params( array( 'context' => 'edit' ) );
+		$user_response     = $user_controller->get_current_item( $request );
+		$current_user_data = is_wp_error( $user_response ) ? (object) array() : $user_response->get_data();
+
+		$settings['currentUserData']      = $current_user_data;
 		$settings['reviewsEnabled']       = get_option( 'woocommerce_enable_reviews' );
 		$settings['manageStock']          = get_option( 'woocommerce_manage_stock' );
 		$settings['commentModeration']    = get_option( 'comment_moderation' );
@@ -199,22 +200,13 @@ class Settings {
 			'installedPlugins' => PluginsHelper::get_installed_plugin_slugs(),
 			'activePlugins'    => Plugins::get_active_plugins(),
 		);
-
-		// DO NOT use outside of core, these can be removed without deprecation.
-		$settings['__experimentalFlags'] = array();
-
 		// Plugins that depend on changing the translation work on the server but not the client -
 		// WooCommerce Branding is an example of this - so pass through the translation of
 		// 'WooCommerce' to wcSettings.
 		$settings['woocommerceTranslation'] = __( 'WooCommerce', 'woocommerce' );
-
-		if ( PageController::is_admin_page() && Features::is_enabled( 'analytics' ) ) {
-			// We may have synced orders with a now-unregistered status.
-			// E.g. an extension that added statuses is now inactive or removed.
-			$settings['unregisteredOrderStatuses'] = $this->get_unregistered_order_statuses();
-			$settings['usesNewFullRefundData']     = OrderUtil::uses_new_full_refund_data();
-		}
-
+		// We may have synced orders with a now-unregistered status.
+		// E.g An extension that added statuses is now inactive or removed.
+		$settings['unregisteredOrderStatuses'] = $this->get_unregistered_order_statuses();
 		// The separator used for attributes found in Variation titles.
 		//phpcs:ignore
 		$settings['variationTitleAttributesSeparator'] = apply_filters( 'woocommerce_product_variation_title_attributes_separator', ' - ', new \WC_Product() );
@@ -240,13 +232,13 @@ class Settings {
 		$settings['allowMarketplaceSuggestions']      = WC_Marketplace_Suggestions::allow_suggestions();
 		$settings['connectNonce']                     = wp_create_nonce( 'connect' );
 		$settings['wcpay_welcome_page_connect_nonce'] = wp_create_nonce( 'wcpay-connect' );
-		$settings['email_preview_nonce']              = wp_create_nonce( 'email-preview-nonce' );
-		$settings['email_listing_nonce']              = wp_create_nonce( 'email-listing-nonce' );
 		$settings['wc_helper_nonces']                 = array(
 			'refresh' => wp_create_nonce( 'refresh' ),
 		);
 
 		$settings['features'] = $this->get_features();
+
+		$settings['isWooPayEligible'] = WCPayPromotionInit::is_woopay_eligible();
 
 		$has_gutenberg     = is_plugin_active( 'gutenberg/gutenberg.php' );
 		$gutenberg_version = '';
@@ -266,7 +258,7 @@ class Settings {
 	}
 
 	/**
-	 * Removes non-necessary feature properties for the client side.
+	 * Removes non necesary feature properties for the client side.
 	 *
 	 * @return array
 	 */

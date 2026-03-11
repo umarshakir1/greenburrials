@@ -8,12 +8,6 @@
  * @since   2.6.0
  */
 
-use Automattic\WooCommerce\Enums\ProductStatus;
-use Automattic\WooCommerce\Enums\ProductStockStatus;
-use Automattic\WooCommerce\Enums\ProductTaxStatus;
-use Automattic\WooCommerce\Enums\ProductType;
-use Automattic\WooCommerce\Enums\CatalogVisibility;
-use Automattic\WooCommerce\Internal\CostOfGoodsSold\CogsAwareRestControllerTrait;
 use Automattic\WooCommerce\Utilities\I18nUtil;
 
 defined( 'ABSPATH' ) || exit;
@@ -26,8 +20,6 @@ defined( 'ABSPATH' ) || exit;
  */
 class WC_REST_Products_Controller extends WC_REST_Products_V2_Controller {
 
-	use CogsAwareRestControllerTrait;
-
 	/**
 	 * Endpoint namespace.
 	 *
@@ -36,29 +28,13 @@ class WC_REST_Products_Controller extends WC_REST_Products_V2_Controller {
 	protected $namespace = 'wc/v3';
 
 	/**
-	 * The value of the 'search_sku' argument if present.
+	 * A string to inject into a query to do a partial match SKU search.
 	 *
 	 * See prepare_objects_query()
 	 *
 	 * @var string
 	 */
-	private $search_sku_arg_value = '';
-
-	/**
-	 * If the 'search_name_or_sku' argument is present this will be set
-	 * to an array of the (space-separated) tokens that form the argument value.
-	 *
-	 * @var array|null
-	 */
-	private $search_name_or_sku_tokens = null;
-
-	/**
-	 * If the 'search_fields' argument is present with 'search' this will be set
-	 * to an array containing the fields to search and tokenized search terms.
-	 *
-	 * @var array|null
-	 */
-	private $search_fields_tokens = null;
+	private $search_sku_in_product_lookup_table = '';
 
 	/**
 	 * Suggested product ids.
@@ -66,20 +42,6 @@ class WC_REST_Products_Controller extends WC_REST_Products_V2_Controller {
 	 * @var array
 	 */
 	private $suggested_products_ids = array();
-
-	/**
-	 * Product statuses to exclude from the query.
-	 *
-	 * @var array
-	 */
-	private $exclude_status = array();
-
-	/**
-	 * Stores attachment IDs processed during the current request for potential cleanup.
-	 *
-	 * @var array
-	 */
-	private $processed_attachment_ids_for_request = array();
 
 	/**
 	 * Register the routes for products.
@@ -176,11 +138,9 @@ class WC_REST_Products_Controller extends WC_REST_Products_V2_Controller {
 			}
 
 			$attachment = wp_get_attachment_image_src( $attachment_id, 'full' );
-
 			if ( ! is_array( $attachment ) ) {
 				continue;
 			}
-			$thumbnail = wp_get_attachment_image_src( $attachment_id, 'woocommerce_thumbnail' );
 
 			$images[] = array(
 				'id'                => (int) $attachment_id,
@@ -191,9 +151,6 @@ class WC_REST_Products_Controller extends WC_REST_Products_V2_Controller {
 				'src'               => current( $attachment ),
 				'name'              => get_the_title( $attachment_id ),
 				'alt'               => get_post_meta( $attachment_id, '_wp_attachment_image_alt', true ),
-				'srcset'            => (string) wp_get_attachment_image_srcset( $attachment_id, 'full' ),
-				'sizes'             => (string) wp_get_attachment_image_sizes( $attachment_id, 'full' ),
-				'thumbnail'         => current( $thumbnail ),
 			);
 		}
 
@@ -212,39 +169,6 @@ class WC_REST_Products_Controller extends WC_REST_Products_V2_Controller {
 
 		// Set post_status.
 		$args['post_status'] = $request['status'];
-
-		// Filter by a list of product statuses.
-		if ( ! empty( $request['include_status'] ) ) {
-			$args['post_status'] = $request['include_status'];
-		}
-
-		if ( ! empty( $request['exclude_status'] ) ) {
-			$this->exclude_status = $request['exclude_status'];
-		} else {
-			$this->exclude_status = array();
-		}
-
-		// Filter downloadable products.
-		if ( isset( $request['downloadable'] ) ) {
-			$args['meta_query'] = $this->add_meta_query( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
-				$args,
-				array(
-					'key'   => '_downloadable',
-					'value' => wc_bool_to_string( $request['downloadable'] ),
-				)
-			);
-		}
-
-		// Filter virtual products.
-		if ( isset( $request['virtual'] ) ) {
-			$args['meta_query'] = $this->add_meta_query( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
-				$args,
-				array(
-					'key'   => '_virtual',
-					'value' => wc_bool_to_string( $request['virtual'] ),
-				)
-			);
-		}
 
 		// Taxonomy query to filter products by type, category,
 		// tag, shipping class, and attribute.
@@ -269,28 +193,11 @@ class WC_REST_Products_Controller extends WC_REST_Products_V2_Controller {
 		}
 
 		// Filter product type by slug.
-		$terms = array();
-		if ( ! empty( $request['include_types'] ) ) {
-			$terms = $request['include_types'];
-		} elseif ( ! empty( $request['type'] ) ) {
-			$terms[] = $request['type'];
-		}
-
-		if ( ! empty( $terms ) ) {
+		if ( ! empty( $request['type'] ) ) {
 			$tax_query[] = array(
 				'taxonomy' => 'product_type',
 				'field'    => 'slug',
-				'terms'    => $terms,
-			);
-		}
-
-		// Add exclude types filter.
-		if ( ! empty( $request['exclude_types'] ) ) {
-			$tax_query[] = array(
-				'taxonomy' => 'product_type',
-				'field'    => 'slug',
-				'terms'    => $request['exclude_types'],
-				'operator' => 'NOT IN',
+				'terms'    => $request['type'],
 			);
 		}
 
@@ -324,37 +231,11 @@ class WC_REST_Products_Controller extends WC_REST_Products_V2_Controller {
 			);
 		}
 
-		// Search parameter precedence: search_fields > search_name_or_sku > search_sku > sku.
-		$search_fields = $request['search_fields'] ?? array();
-		$search_arg    = trim( $request['search'] ?? '' );
-
-		if ( $search_fields && $search_arg ) {
-			$tokens = array_filter( array_map( 'trim', explode( ' ', $search_arg ) ) );
-
-			$this->search_fields_tokens = array(
-				'fields' => $search_fields,
-				'tokens' => $tokens,
-			);
-
-			unset( $request['search'], $request['search_sku'], $request['sku'], $request['search_name_or_sku'], $args['s'] );
-		}
-
-		$search_name_or_sku_arg = $request['search_name_or_sku'] ?? '';
-
-		if ( '' !== $search_name_or_sku_arg ) {
-			// Do a tokenized search for name or SKU. Supersedes the 'search', 'search_sku' and 'sku' arguments.
-			$tokens                          = array_filter( array_map( 'trim', explode( ' ', $search_name_or_sku_arg ) ) );
-			$this->search_name_or_sku_tokens = $tokens;
-
-			unset( $request['search'] );
-			unset( $args['s'] );
-			unset( $request['search_sku'] );
-			unset( $request['sku'] );
-		} elseif ( wc_product_sku_enabled() ) {
-			// Do a partial match for a sku. Supersedes the 'sku' argument, that does exact matching.
+		if ( wc_product_sku_enabled() ) {
+			// Do a partial match for a sku. Supercedes sku parameter that does exact matching.
 			if ( ! empty( $request['search_sku'] ) ) {
 				// Store this for use in the query clause filters.
-				$this->search_sku_arg_value = $request['search_sku'];
+				$this->search_sku_in_product_lookup_table = $request['search_sku'];
 
 				unset( $request['sku'] );
 			}
@@ -376,18 +257,6 @@ class WC_REST_Products_Controller extends WC_REST_Products_V2_Controller {
 					)
 				);
 			}
-		}
-
-		if ( ! empty( $request['global_unique_id'] ) ) {
-			$global_unique_ids  = array_map( 'trim', explode( ',', $request['global_unique_id'] ) );
-			$args['meta_query'] = $this->add_meta_query( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
-				$args,
-				array(
-					'key'     => '_global_unique_id',
-					'value'   => $global_unique_ids,
-					'compare' => 'IN',
-				)
-			);
 		}
 
 		// Filter by tax class.
@@ -429,7 +298,7 @@ class WC_REST_Products_Controller extends WC_REST_Products_V2_Controller {
 		}
 
 		// Force the post_type argument, since it's not a user input variable.
-		if ( ! empty( $request['sku'] ) || ! empty( $request['search_sku'] ) || $this->search_name_or_sku_tokens || $this->search_fields_tokens ) {
+		if ( ! empty( $request['sku'] ) || ! empty( $request['search_sku'] ) ) {
 			$args['post_type'] = array( 'product', 'product_variation' );
 		} else {
 			$args['post_type'] = $this->post_type;
@@ -451,11 +320,6 @@ class WC_REST_Products_Controller extends WC_REST_Products_V2_Controller {
 			$args['post__in'] = $this->suggested_products_ids;
 		}
 
-		// Force the post_type argument, since it's not a user input variable.
-		if ( ! empty( $request['global_unique_id'] ) ) {
-			$args['post_type'] = array( 'product', 'product_variation' );
-		}
-
 		return $args;
 	}
 
@@ -466,38 +330,21 @@ class WC_REST_Products_Controller extends WC_REST_Products_V2_Controller {
 	 * @return array
 	 */
 	protected function get_objects( $query_args ) {
-		$add_search_criteria = $this->search_sku_arg_value || $this->search_name_or_sku_tokens || $this->search_fields_tokens;
-
 		// Add filters for search criteria in product postmeta via the lookup table.
-		if ( $add_search_criteria ) {
+		if ( ! empty( $this->search_sku_in_product_lookup_table ) ) {
 			add_filter( 'posts_join', array( $this, 'add_search_criteria_to_wp_query_join' ) );
 			add_filter( 'posts_where', array( $this, 'add_search_criteria_to_wp_query_where' ) );
-		}
-
-		// Add filters for excluding product statuses.
-		if ( ! empty( $this->exclude_status ) ) {
-			add_filter( 'posts_where', array( $this, 'exclude_product_statuses' ) );
 		}
 
 		$result = parent::get_objects( $query_args );
 
 		// Remove filters for search criteria in product postmeta via the lookup table.
-		if ( $add_search_criteria ) {
+		if ( ! empty( $this->search_sku_in_product_lookup_table ) ) {
 			remove_filter( 'posts_join', array( $this, 'add_search_criteria_to_wp_query_join' ) );
 			remove_filter( 'posts_where', array( $this, 'add_search_criteria_to_wp_query_where' ) );
 
-			$this->search_sku_arg_value      = '';
-			$this->search_name_or_sku_tokens = null;
-			$this->search_fields_tokens      = null;
+			$this->search_sku_in_product_lookup_table = '';
 		}
-
-		// Remove filters for excluding product statuses.
-		if ( ! empty( $this->exclude_status ) ) {
-			remove_filter( 'posts_where', array( $this, 'exclude_product_statuses' ) );
-
-			$this->exclude_status = array();
-		}
-
 		return $result;
 	}
 
@@ -508,23 +355,11 @@ class WC_REST_Products_Controller extends WC_REST_Products_V2_Controller {
 	 * @return string
 	 */
 	public function add_search_criteria_to_wp_query_join( $join ) {
-		// Check if already joined to avoid duplicate joins.
-		if ( strstr( $join, 'wc_product_meta_lookup' ) ) {
-			return $join;
-		}
-
-		// Only join if we need meta table search.
-		if ( ! $this->search_fields_tokens &&
-			! $this->search_sku_arg_value &&
-			! ( $this->search_name_or_sku_tokens && wc_product_sku_enabled() ) ) {
-			return $join;
-		}
-
 		global $wpdb;
-
-		$join .= " LEFT JOIN $wpdb->wc_product_meta_lookup wc_product_meta_lookup
+		if ( ! empty( $this->search_sku_in_product_lookup_table ) && ! strstr( $join, 'wc_product_meta_lookup' ) ) {
+			$join .= " LEFT JOIN $wpdb->wc_product_meta_lookup wc_product_meta_lookup
 						ON $wpdb->posts.ID = wc_product_meta_lookup.product_id ";
-
+		}
 		return $join;
 	}
 
@@ -536,89 +371,10 @@ class WC_REST_Products_Controller extends WC_REST_Products_V2_Controller {
 	 */
 	public function add_search_criteria_to_wp_query_where( $where ) {
 		global $wpdb;
-
-		if ( $this->search_fields_tokens ) {
-			$where .= $this->build_dynamic_search_clauses(
-				$this->search_fields_tokens['tokens'],
-				$this->search_fields_tokens['fields']
-			);
-		} elseif ( $this->search_name_or_sku_tokens ) {
-			$searchable_fields = wc_product_sku_enabled() ? array( 'name', 'sku' ) : array( 'name' );
-			$where            .= $this->build_dynamic_search_clauses(
-				$this->search_name_or_sku_tokens,
-				$searchable_fields
-			);
-		} elseif ( ! empty( $this->search_sku_arg_value ) ) {
-			$like_search = '%' . $wpdb->esc_like( $this->search_sku_arg_value ) . '%';
+		if ( ! empty( $this->search_sku_in_product_lookup_table ) ) {
+			$like_search = '%' . $wpdb->esc_like( $this->search_sku_in_product_lookup_table ) . '%';
 			$where      .= ' AND ' . $wpdb->prepare( '(wc_product_meta_lookup.sku LIKE %s)', $like_search );
 		}
-		return $where;
-	}
-
-	/**
-	 * Build search clauses for dynamic product search.
-	 *
-	 * @param array $tokens Search tokens.
-	 * @param array $fields Fields to search in.
-	 * @return string
-	 */
-	private function build_dynamic_search_clauses( $tokens, $fields ) {
-		global $wpdb;
-
-		if ( empty( $fields ) || empty( $tokens ) ) {
-			return '';
-		}
-
-		$column_map = array(
-			'name'              => "{$wpdb->posts}.post_title",
-			'sku'               => 'wc_product_meta_lookup.sku',
-			'global_unique_id'  => 'wc_product_meta_lookup.global_unique_id',
-			'description'       => "{$wpdb->posts}.post_content",
-			'short_description' => "{$wpdb->posts}.post_excerpt",
-		);
-
-		$field_clauses = array();
-
-		foreach ( $tokens as $token ) {
-			$like_search         = '%' . $wpdb->esc_like( $token ) . '%';
-			$field_token_clauses = array();
-
-			foreach ( $fields as $field ) {
-				if ( ! isset( $column_map[ $field ] ) ) {
-					continue;
-				}
-
-				$db_column             = $column_map[ $field ];
-				$field_token_clauses[] = $wpdb->prepare( "({$db_column} LIKE %s)", $like_search ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-			}
-
-			if ( $field_token_clauses ) {
-				$field_clauses[] = '(' . implode( ' OR ', $field_token_clauses ) . ')';
-			}
-		}
-
-		return $field_clauses ? ' AND (' . implode( ' AND ', $field_clauses ) . ')' : '';
-	}
-
-	/**
-	 * Exclude product statuses from the query.
-	 *
-	 * @param string $where Where clause used to search posts.
-	 * @return string
-	 */
-	public function exclude_product_statuses( $where ) {
-		if ( ! empty( $this->exclude_status ) && is_array( $this->exclude_status ) ) {
-			global $wpdb;
-
-			$not_in = array();
-			foreach ( $this->exclude_status as $status_to_exclude ) {
-				$not_in[] = $wpdb->prepare( '%s', $status_to_exclude );
-			}
-
-			$not_in = join( ', ', $not_in );
-			return $where . " AND $wpdb->posts.post_status NOT IN ( $not_in )";
-		}
-
 		return $where;
 	}
 
@@ -638,8 +394,6 @@ class WC_REST_Products_Controller extends WC_REST_Products_V2_Controller {
 
 			foreach ( $images as $index => $image ) {
 				$attachment_id = isset( $image['id'] ) ? absint( $image['id'] ) : 0;
-				// The request can contain an attachment ID, if it doesn't, it's a new upload.
-				$is_new_upload = false;
 
 				if ( 0 === $attachment_id && isset( $image['src'] ) ) {
 					$upload = wc_rest_upload_image_from_url( esc_url_raw( $image['src'] ) );
@@ -653,17 +407,11 @@ class WC_REST_Products_Controller extends WC_REST_Products_V2_Controller {
 					}
 
 					$attachment_id = wc_rest_set_uploaded_image_as_attachment( $upload, $product->get_id() );
-					$is_new_upload = true;
 				}
 
 				if ( ! wp_attachment_is_image( $attachment_id ) ) {
 					/* translators: %s: image ID */
 					throw new WC_REST_Exception( 'woocommerce_product_invalid_image_id', sprintf( __( '#%s is an invalid image ID.', 'woocommerce' ), $attachment_id ), 400 );
-				}
-
-				if ( $is_new_upload && $attachment_id > 0 ) {
-					// Tracking this for rollback purposes.
-					$this->processed_attachment_ids_for_request[] = $attachment_id;
 				}
 
 				$featured_image = $product->get_image_id();
@@ -725,7 +473,7 @@ class WC_REST_Products_Controller extends WC_REST_Products_V2_Controller {
 			$product = new WC_Product_Simple();
 		}
 
-		if ( ProductType::VARIATION === $product->get_type() ) {
+		if ( 'variation' === $product->get_type() ) {
 			return new WP_Error(
 				"woocommerce_rest_invalid_{$this->post_type}_id",
 				__( 'To manipulate product variations you should use the /products/&lt;product_id&gt;/variations/&lt;id&gt; endpoint.', 'woocommerce' ),
@@ -752,7 +500,7 @@ class WC_REST_Products_Controller extends WC_REST_Products_V2_Controller {
 
 		// Post status.
 		if ( isset( $request['status'] ) ) {
-			$product->set_status( get_post_status_object( $request['status'] ) ? $request['status'] : ProductStatus::DRAFT );
+			$product->set_status( get_post_status_object( $request['status'] ) ? $request['status'] : 'draft' );
 		}
 
 		// Post slug.
@@ -885,7 +633,7 @@ class WC_REST_Products_Controller extends WC_REST_Products_V2_Controller {
 		}
 
 		// Sales and prices.
-		if ( in_array( $product->get_type(), array( ProductType::VARIABLE, ProductType::GROUPED ), true ) ) {
+		if ( in_array( $product->get_type(), array( 'variable', 'grouped' ), true ) ) {
 			$product->set_regular_price( '' );
 			$product->set_sale_price( '' );
 			$product->set_date_on_sale_to( '' );
@@ -948,19 +696,19 @@ class WC_REST_Products_Controller extends WC_REST_Products_V2_Controller {
 				$product->set_backorders( $request['backorders'] );
 			}
 
-			if ( $product->is_type( ProductType::GROUPED ) ) {
+			if ( $product->is_type( 'grouped' ) ) {
 				$product->set_manage_stock( 'no' );
 				$product->set_backorders( 'no' );
 				$product->set_stock_quantity( '' );
 				$product->set_stock_status( $stock_status );
-			} elseif ( $product->is_type( ProductType::EXTERNAL ) ) {
+			} elseif ( $product->is_type( 'external' ) ) {
 				$product->set_manage_stock( 'no' );
 				$product->set_backorders( 'no' );
 				$product->set_stock_quantity( '' );
-				$product->set_stock_status( ProductStockStatus::IN_STOCK );
+				$product->set_stock_status( 'instock' );
 			} elseif ( $product->get_manage_stock() ) {
 				// Stock status is always determined by children so sync later.
-				if ( ! $product->is_type( ProductType::VARIABLE ) ) {
+				if ( ! $product->is_type( 'variable' ) ) {
 					$product->set_stock_status( $stock_status );
 				}
 
@@ -989,7 +737,7 @@ class WC_REST_Products_Controller extends WC_REST_Products_V2_Controller {
 				$product->set_stock_status( $stock_status );
 				$product->set_low_stock_amount( '' );
 			}
-		} elseif ( ! $product->is_type( ProductType::VARIABLE ) ) {
+		} elseif ( ! $product->is_type( 'variable' ) ) {
 			$product->set_stock_status( $stock_status );
 		}
 
@@ -1087,7 +835,7 @@ class WC_REST_Products_Controller extends WC_REST_Products_V2_Controller {
 		}
 
 		// Product url and button text for external products.
-		if ( $product->is_type( ProductType::EXTERNAL ) ) {
+		if ( $product->is_type( 'external' ) ) {
 			if ( isset( $request['external_url'] ) ) {
 				$product->set_product_url( $request['external_url'] );
 			}
@@ -1098,12 +846,12 @@ class WC_REST_Products_Controller extends WC_REST_Products_V2_Controller {
 		}
 
 		// Save default attributes for variable products.
-		if ( $product->is_type( ProductType::VARIABLE ) ) {
+		if ( $product->is_type( 'variable' ) ) {
 			$product = $this->save_default_attributes( $product, $request );
 		}
 
 		// Set children for a grouped product.
-		if ( $product->is_type( ProductType::GROUPED ) && isset( $request['grouped_products'] ) ) {
+		if ( $product->is_type( 'grouped' ) && isset( $request['grouped_products'] ) ) {
 			$product->set_children( $request['grouped_products'] );
 		}
 
@@ -1133,10 +881,6 @@ class WC_REST_Products_Controller extends WC_REST_Products_V2_Controller {
 			if ( $date ) {
 				$product->set_date_created( $date );
 			}
-		}
-
-		if ( $this->cogs_is_enabled() ) {
-			$this->set_cogs_info_in_product_object( $request, $product );
 		}
 
 		/**
@@ -1213,15 +957,15 @@ class WC_REST_Products_Controller extends WC_REST_Products_V2_Controller {
 				'type'                  => array(
 					'description' => __( 'Product type.', 'woocommerce' ),
 					'type'        => 'string',
-					'default'     => ProductType::SIMPLE,
+					'default'     => 'simple',
 					'enum'        => array_keys( wc_get_product_types() ),
 					'context'     => array( 'view', 'edit' ),
 				),
 				'status'                => array(
 					'description' => __( 'Product status (post status).', 'woocommerce' ),
 					'type'        => 'string',
-					'default'     => ProductStatus::PUBLISH,
-					'enum'        => array_merge( array_keys( get_post_statuses() ), array( ProductStatus::FUTURE, ProductStatus::AUTO_DRAFT, ProductStatus::TRASH ) ),
+					'default'     => 'publish',
+					'enum'        => array_merge( array_keys( get_post_statuses() ), array( 'future', 'auto-draft', 'trash' ) ),
 					'context'     => array( 'view', 'edit' ),
 				),
 				'featured'              => array(
@@ -1233,8 +977,8 @@ class WC_REST_Products_Controller extends WC_REST_Products_V2_Controller {
 				'catalog_visibility'    => array(
 					'description' => __( 'Catalog visibility.', 'woocommerce' ),
 					'type'        => 'string',
-					'default'     => CatalogVisibility::VISIBLE,
-					'enum'        => array( CatalogVisibility::VISIBLE, CatalogVisibility::CATALOG, CatalogVisibility::SEARCH, CatalogVisibility::HIDDEN ),
+					'default'     => 'visible',
+					'enum'        => array( 'visible', 'catalog', 'search', 'hidden' ),
 					'context'     => array( 'view', 'edit' ),
 				),
 				'description'           => array(
@@ -1380,8 +1124,8 @@ class WC_REST_Products_Controller extends WC_REST_Products_V2_Controller {
 				'tax_status'            => array(
 					'description' => __( 'Tax status.', 'woocommerce' ),
 					'type'        => 'string',
-					'default'     => ProductTaxStatus::TAXABLE,
-					'enum'        => array( ProductTaxStatus::TAXABLE, ProductTaxStatus::SHIPPING, ProductTaxStatus::NONE ),
+					'default'     => 'taxable',
+					'enum'        => array( 'taxable', 'shipping', 'none' ),
 					'context'     => array( 'view', 'edit' ),
 				),
 				'tax_class'             => array(
@@ -1397,13 +1141,13 @@ class WC_REST_Products_Controller extends WC_REST_Products_V2_Controller {
 				),
 				'stock_quantity'        => array(
 					'description' => __( 'Stock quantity.', 'woocommerce' ),
-					'type'        => wc_is_stock_amount_integer() ? 'integer' : 'number',
+					'type'        => has_filter( 'woocommerce_stock_amount', 'intval' ) ? 'integer' : 'number',
 					'context'     => array( 'view', 'edit' ),
 				),
 				'stock_status'          => array(
 					'description' => __( 'Controls the stock status of the product.', 'woocommerce' ),
 					'type'        => 'string',
-					'default'     => ProductStockStatus::IN_STOCK,
+					'default'     => 'instock',
 					'enum'        => array_keys( wc_get_product_stock_status_options() ),
 					'context'     => array( 'view', 'edit' ),
 				),
@@ -1569,33 +1313,6 @@ class WC_REST_Products_Controller extends WC_REST_Products_V2_Controller {
 							),
 							'slug' => array(
 								'description' => __( 'Category slug.', 'woocommerce' ),
-								'type'        => 'string',
-								'context'     => array( 'view', 'edit' ),
-								'readonly'    => true,
-							),
-						),
-					),
-				),
-				'brands'                => array(
-					'description' => __( 'List of brands.', 'woocommerce' ),
-					'type'        => 'array',
-					'context'     => array( 'view', 'edit' ),
-					'items'       => array(
-						'type'       => 'object',
-						'properties' => array(
-							'id'   => array(
-								'description' => __( 'Brand ID.', 'woocommerce' ),
-								'type'        => 'integer',
-								'context'     => array( 'view', 'edit' ),
-							),
-							'name' => array(
-								'description' => __( 'Brand name.', 'woocommerce' ),
-								'type'        => 'string',
-								'context'     => array( 'view', 'edit' ),
-								'readonly'    => true,
-							),
-							'slug' => array(
-								'description' => __( 'Brand slug.', 'woocommerce' ),
 								'type'        => 'string',
 								'context'     => array( 'view', 'edit' ),
 								'readonly'    => true,
@@ -1830,10 +1547,6 @@ class WC_REST_Products_Controller extends WC_REST_Products_V2_Controller {
 			);
 		}
 
-		if ( $this->cogs_is_enabled() ) {
-			$schema = $this->add_cogs_related_product_schema( $schema, false );
-		}
-
 		return $this->add_additional_fields_schema( $schema );
 	}
 
@@ -1856,91 +1569,9 @@ class WC_REST_Products_Controller extends WC_REST_Products_V2_Controller {
 		);
 
 		$params['search_sku'] = array(
-			'description'       => __( "Limit results to those with a SKU that partial matches a string. This argument takes precedence over 'sku'.", 'woocommerce' ),
+			'description'       => __( 'Limit results to those with a SKU that partial matches a string.', 'woocommerce' ),
 			'type'              => 'string',
 			'sanitize_callback' => 'sanitize_text_field',
-			'validate_callback' => 'rest_validate_request_arg',
-		);
-
-		$params['search_name_or_sku'] = array(
-			'description'       => __( "Limit results to those with a name or SKU that partial matches a string. This argument takes precedence over 'search', 'sku' and 'search_sku'.", 'woocommerce' ),
-			'type'              => 'string',
-			'sanitize_callback' => 'sanitize_text_field',
-			'validate_callback' => 'rest_validate_request_arg',
-		);
-
-		$search_fields_enum = array( 'name', 'global_unique_id', 'description', 'short_description' );
-		if ( wc_product_sku_enabled() ) {
-			$search_fields_enum[] = 'sku';
-		}
-
-		$params['search_fields'] = array(
-			'description'       => __( 'Limit search to specific fields when used with search parameter. Available fields: name, sku, global_unique_id, description, short_description. This argument takes precedence over all other search parameters.', 'woocommerce' ),
-			'type'              => 'array',
-			'items'             => array(
-				'type' => 'string',
-				'enum' => $search_fields_enum,
-			),
-			'default'           => array(),
-			'sanitize_callback' => 'wp_parse_slug_list',
-			'validate_callback' => 'rest_validate_request_arg',
-		);
-
-		$params['include_status'] = array(
-			'description'       => __( 'Limit result set to products with any of the statuses.', 'woocommerce' ),
-			'type'              => 'array',
-			'items'             => array(
-				'type' => 'string',
-				'enum' => array_merge( array( 'any', ProductStatus::FUTURE, ProductStatus::TRASH ), array_keys( get_post_statuses() ) ),
-			),
-			'sanitize_callback' => 'wp_parse_list',
-			'validate_callback' => 'rest_validate_request_arg',
-		);
-
-		$params['exclude_status'] = array(
-			'description'       => __( 'Exclude products with any of the statuses from result set.', 'woocommerce' ),
-			'type'              => 'array',
-			'items'             => array(
-				'type' => 'string',
-				'enum' => array_merge( array( ProductStatus::FUTURE, ProductStatus::TRASH ), array_keys( get_post_statuses() ) ),
-			),
-			'sanitize_callback' => 'wp_parse_list',
-			'validate_callback' => 'rest_validate_request_arg',
-		);
-
-		$params['include_types'] = array(
-			'description'       => __( 'Limit result set to products with any of the types.', 'woocommerce' ),
-			'type'              => 'array',
-			'items'             => array(
-				'type' => 'string',
-				'enum' => array_keys( wc_get_product_types() ),
-			),
-			'sanitize_callback' => 'wp_parse_list',
-			'validate_callback' => 'rest_validate_request_arg',
-		);
-
-		$params['exclude_types'] = array(
-			'description'       => __( 'Exclude products with any of the types from result set.', 'woocommerce' ),
-			'type'              => 'array',
-			'items'             => array(
-				'type' => 'string',
-				'enum' => array_keys( wc_get_product_types() ),
-			),
-			'sanitize_callback' => 'wp_parse_list',
-			'validate_callback' => 'rest_validate_request_arg',
-		);
-
-		$params['downloadable'] = array(
-			'description'       => __( 'Limit result set to downloadable products.', 'woocommerce' ),
-			'type'              => 'boolean',
-			'sanitize_callback' => 'rest_sanitize_boolean',
-			'validate_callback' => 'rest_validate_request_arg',
-		);
-
-		$params['virtual'] = array(
-			'description'       => __( 'Limit result set to virtual products.', 'woocommerce' ),
-			'type'              => 'boolean',
-			'sanitize_callback' => 'rest_sanitize_boolean',
 			'validate_callback' => 'rest_validate_request_arg',
 		);
 
@@ -2103,50 +1734,5 @@ class WC_REST_Products_Controller extends WC_REST_Products_V2_Controller {
 		$this->suggested_products_ids = array_slice( $this->suggested_products_ids, 0, $limit );
 
 		return parent::get_items( $request );
-	}
-
-	/**
-	 * Core function to prepare a single product output for response
-	 * (doesn't fire hooks, ensure_response, or add links).
-	 *
-	 * @param WC_Data         $object_data Object data.
-	 * @param WP_REST_Request $request Request object.
-	 * @param string          $context Request context.
-	 * @return array Product data to be included in the response.
-	 */
-	protected function prepare_object_for_response_core( $object_data, $request, $context ): array {
-		$data = parent::prepare_object_for_response_core( $object_data, $request, $context );
-
-		if ( $this->cogs_is_enabled() ) {
-			$this->add_cogs_info_to_returned_product_data( $data, $object_data );
-		}
-
-		return $data;
-	}
-
-	/**
-	 * Create a single item.
-	 * Handles cleanup of orphaned images if product creation fails.
-	 *
-	 * @param WP_REST_Request $request Request object.
-	 * @return WP_REST_Response|WP_Error Response object on success, or WP_Error object on failure.
-	 */
-	public function create_item( $request ) {
-		$this->processed_attachment_ids_for_request = array();
-
-		$response = parent::create_item( $request );
-
-		if ( is_wp_error( $response ) ) {
-			if ( ! empty( $this->processed_attachment_ids_for_request ) ) {
-				// Handle deletion of orphaned images.
-				foreach ( $this->processed_attachment_ids_for_request as $attachment_id ) {
-					wp_delete_attachment( (int) $attachment_id, true );
-				}
-			}
-		}
-
-		$this->processed_attachment_ids_for_request = array();
-
-		return $response;
 	}
 }

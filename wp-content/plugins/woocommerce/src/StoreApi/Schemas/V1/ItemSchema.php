@@ -1,6 +1,4 @@
 <?php
-declare( strict_types=1 );
-
 namespace Automattic\WooCommerce\StoreApi\Schemas\V1;
 
 /**
@@ -47,19 +45,19 @@ abstract class ItemSchema extends ProductSchema {
 				'properties'  => [
 					'minimum'     => [
 						'description' => __( 'The minimum quantity allowed for this line item.', 'woocommerce' ),
-						'type'        => 'number',
+						'type'        => 'integer',
 						'context'     => [ 'view', 'edit' ],
 						'readonly'    => true,
 					],
 					'maximum'     => [
 						'description' => __( 'The maximum quantity allowed for this line item.', 'woocommerce' ),
-						'type'        => 'number',
+						'type'        => 'integer',
 						'context'     => [ 'view', 'edit' ],
 						'readonly'    => true,
 					],
 					'multiple_of' => [
 						'description' => __( 'The amount that quantities increment by. Quantity must be an multiple of this value.', 'woocommerce' ),
-						'type'        => 'number',
+						'type'        => 'integer',
 						'context'     => [ 'view', 'edit' ],
 						'readonly'    => true,
 						'default'     => 1,
@@ -99,7 +97,7 @@ abstract class ItemSchema extends ProductSchema {
 			],
 			'low_stock_remaining'  => [
 				'description' => __( 'Quantity left in stock if stock is low, or null if not applicable.', 'woocommerce' ),
-				'type'        => [ 'number', 'null' ],
+				'type'        => [ 'integer', 'null' ],
 				'context'     => [ 'view', 'edit' ],
 				'readonly'    => true,
 			],
@@ -146,19 +144,13 @@ abstract class ItemSchema extends ProductSchema {
 				'items'       => [
 					'type'       => 'object',
 					'properties' => [
-						'raw_attribute' => [
-							'description' => __( 'Variation system generated attribute name.', 'woocommerce' ),
-							'type'        => 'string',
-							'context'     => array( 'view', 'edit' ),
-							'readonly'    => true,
-						],
-						'attribute'     => [
+						'attribute' => [
 							'description' => __( 'Variation attribute name.', 'woocommerce' ),
 							'type'        => 'string',
 							'context'     => [ 'view', 'edit' ],
 							'readonly'    => true,
 						],
-						'value'         => [
+						'value'     => [
 							'description' => __( 'Variation attribute value.', 'woocommerce' ),
 							'type'        => 'string',
 							'context'     => [ 'view', 'edit' ],

@@ -8,8 +8,6 @@
  * @version 3.0.0
  */
 
-use Automattic\WooCommerce\Enums\ProductType;
-
 defined( 'ABSPATH' ) || exit;
 
 /**
@@ -32,7 +30,7 @@ class WC_Product_Grouped extends WC_Product {
 	 * @return string
 	 */
 	public function get_type() {
-		return ProductType::GROUPED;
+		return 'grouped';
 	}
 
 	/**
@@ -148,51 +146,6 @@ class WC_Product_Grouped extends WC_Product {
 		return $this->get_prop( 'children', $context );
 	}
 
-	/**
-	 * Return the product's children - visible only.
-	 *
-	 * @since 9.8.0
-	 * @return array Child products
-	 */
-	public function get_visible_children() {
-		$grouped_products = array_map( 'wc_get_product', $this->get_children() );
-		return array_filter( $grouped_products, 'wc_products_array_filter_visible_grouped' );
-	}
-
-	/**
-	 * Get the minimum price from visible child products.
-	 *
-	 * @since 10.1.0
-	 * @return string Minimum price or empty string if no children
-	 */
-	public function get_min_price() {
-		$children = array_filter( array_map( 'wc_get_product', $this->get_children() ), 'wc_products_array_filter_visible_grouped' );
-		$prices   = array_map( 'wc_get_price_to_display', $children );
-
-		if ( empty( $prices ) ) {
-			return '';
-		}
-
-		return wc_format_decimal( min( $prices ) );
-	}
-
-	/**
-	 * Get the maximum price from visible child products.
-	 *
-	 * @since 10.1.0
-	 * @return string Maximum price or empty string if no children
-	 */
-	public function get_max_price() {
-		$children = array_filter( array_map( 'wc_get_product', $this->get_children() ), 'wc_products_array_filter_visible_grouped' );
-		$prices   = array_map( 'wc_get_price_to_display', $children );
-
-		if ( empty( $prices ) ) {
-			return '';
-		}
-
-		return wc_format_decimal( max( $prices ) );
-	}
-
 	/*
 	|--------------------------------------------------------------------------
 	| Setters
@@ -202,7 +155,7 @@ class WC_Product_Grouped extends WC_Product {
 	*/
 
 	/**
-	 * Sets an array of children for the product.
+	 * Return the children of this product.
 	 *
 	 * @param array $children List of product children.
 	 */

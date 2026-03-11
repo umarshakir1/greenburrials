@@ -1,5 +1,4 @@
 <?php
-declare( strict_types=1 );
 namespace Automattic\WooCommerce\Blocks\Templates;
 
 /**
@@ -17,13 +16,6 @@ abstract class AbstractTemplate {
 	 * @var string
 	 */
 	const SLUG = '';
-
-	/**
-	 * Whether this is a taxonomy template.
-	 *
-	 * @var bool
-	 */
-	public bool $is_taxonomy_template = false;
 
 	/**
 	 * Initialization method.

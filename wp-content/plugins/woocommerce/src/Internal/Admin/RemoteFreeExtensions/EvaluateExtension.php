@@ -8,7 +8,6 @@ namespace Automattic\WooCommerce\Internal\Admin\RemoteFreeExtensions;
 defined( 'ABSPATH' ) || exit;
 
 use Automattic\WooCommerce\Admin\PluginsHelper;
-use Automattic\WooCommerce\Admin\RemoteSpecs\RuleProcessors\EvaluateOverrides;
 use Automattic\WooCommerce\Admin\RemoteSpecs\RuleProcessors\RuleEvaluator;
 
 /**
@@ -59,9 +58,7 @@ class EvaluateExtension {
 	 * @return array The bundles and errors.
 	 */
 	public static function evaluate_bundles( $specs, $allowed_bundles = array() ) {
-		$bundles        = array();
-		$evaluate_order = new EvaluateOverrides();
-		$context        = array();
+		$bundles = array();
 
 		foreach ( $specs as $spec ) {
 			$spec              = (object) $spec;
@@ -83,9 +80,6 @@ class EvaluateExtension {
 					$errors[] = $e;
 				}
 			}
-
-			$context['plugins'] = $bundle['plugins'];
-			$bundle['plugins']  = $evaluate_order->evaluate( $bundle['plugins'], $context );
 
 			$bundles[] = $bundle;
 		}

@@ -143,7 +143,6 @@ class OrdersTableRefundDataStore extends OrdersTableDataStore {
 	 */
 	public function update( &$refund ) {
 		$this->persist_updates( $refund );
-		$refund->apply_changes();
 	}
 
 	/**

@@ -54,7 +54,7 @@ class Controller extends GenericStatsController {
 	}
 
 	/**
-	 * Get data from `'coupons-stats'` GenericQuery.
+	 * Get data from `'coupons-stats'` Query.
 	 *
 	 * @override GenericController::get_datastore_data()
 	 *
@@ -142,13 +142,11 @@ class Controller extends GenericStatsController {
 	 */
 	public function get_collection_params() {
 		$params                    = parent::get_collection_params();
-		$params['orderby']['enum'] = $this->apply_custom_orderby_filters(
-			array(
-				'date',
-				'amount',
-				'coupons_count',
-				'orders_count',
-			)
+		$params['orderby']['enum'] = array(
+			'date',
+			'amount',
+			'coupons_count',
+			'orders_count',
 		);
 		$params['coupons']         = array(
 			'description'       => __( 'Limit result set to coupons assigned specific coupon IDs.', 'woocommerce' ),

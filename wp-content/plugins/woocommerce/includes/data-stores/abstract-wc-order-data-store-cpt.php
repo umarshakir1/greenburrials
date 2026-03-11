@@ -6,10 +6,7 @@
  */
 
 use Automattic\Jetpack\Constants;
-use Automattic\WooCommerce\Caches\OrderCache;
-use Automattic\WooCommerce\Enums\OrderStatus;
 use Automattic\WooCommerce\Proxies\LegacyProxy;
-use Automattic\WooCommerce\Utilities\OrderUtil;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -177,7 +174,7 @@ abstract class Abstract_WC_Order_Data_Store_CPT extends WC_Data_Store_WP impleme
 	 * Set the properties of an object and log the first error found while doing so.
 	 *
 	 * @param $order WC_Order $order Order object.
-	 * @param array $props The properties to set.
+	 * @param array          $props The properties to set.
 	 */
 	private function set_order_props( &$order, array $props ) {
 		$errors = $order->set_props( $props );
@@ -322,7 +319,7 @@ abstract class Abstract_WC_Order_Data_Store_CPT extends WC_Data_Store_WP impleme
 			}
 
 			wp_trash_post( $id );
-			$order->set_status( OrderStatus::TRASH );
+			$order->set_status( 'trash' );
 
 			if ( $do_filters ) {
 				/**
@@ -363,7 +360,7 @@ abstract class Abstract_WC_Order_Data_Store_CPT extends WC_Data_Store_WP impleme
 			 *
 			 * @since 3.7.0
 			 */
-			$order_status = apply_filters( 'woocommerce_default_order_status', OrderStatus::PENDING );
+			$order_status = apply_filters( 'woocommerce_default_order_status', 'pending' );
 		}
 
 		$post_status    = $order_status;
@@ -373,7 +370,7 @@ abstract class Abstract_WC_Order_Data_Store_CPT extends WC_Data_Store_WP impleme
 		// In the future this should only happen based on `wc_is_order_status`, but in order to
 		// preserve back-compatibility this happens to all statuses except a select few. A doing_it_wrong
 		// Notice will be needed here, followed by future removal.
-		if ( ! in_array( $post_status, array( OrderStatus::AUTO_DRAFT, OrderStatus::DRAFT, OrderStatus::TRASH ), true ) && in_array( 'wc-' . $post_status, $valid_statuses, true ) ) {
+		if ( ! in_array( $post_status, array( 'auto-draft', 'draft', 'trash' ), true ) && in_array( 'wc-' . $post_status, $valid_statuses, true ) ) {
 			$post_status = 'wc-' . $post_status;
 		}
 
@@ -423,22 +420,18 @@ abstract class Abstract_WC_Order_Data_Store_CPT extends WC_Data_Store_WP impleme
 	protected function read_order_data( &$order, $post_object ) {
 		$id = $order->get_id();
 
-		$meta_data = get_post_meta( $id );
-
-		$prices_include_tax = $meta_data['_prices_include_tax'][0] ?? '';
-
 		$this->set_order_props(
 			$order,
 			array(
-				'currency'           => $meta_data['_order_currency'][0] ?? '',
-				'discount_total'     => $meta_data['_cart_discount'][0] ?? '',
-				'discount_tax'       => $meta_data['_cart_discount_tax'][0] ?? '',
-				'shipping_total'     => $meta_data['_order_shipping'][0] ?? '',
-				'shipping_tax'       => $meta_data['_order_shipping_tax'][0] ?? '',
-				'cart_tax'           => $meta_data['_order_tax'][0] ?? '',
-				'total'              => $meta_data['_order_total'][0] ?? '',
-				'version'            => $meta_data['_order_version'][0] ?? '',
-				'prices_include_tax' => metadata_exists( 'post', $id, '_prices_include_tax' ) ? 'yes' === $prices_include_tax : 'yes' === get_option( 'woocommerce_prices_include_tax' ),
+				'currency'           => get_post_meta( $id, '_order_currency', true ),
+				'discount_total'     => get_post_meta( $id, '_cart_discount', true ),
+				'discount_tax'       => get_post_meta( $id, '_cart_discount_tax', true ),
+				'shipping_total'     => get_post_meta( $id, '_order_shipping', true ),
+				'shipping_tax'       => get_post_meta( $id, '_order_shipping_tax', true ),
+				'cart_tax'           => get_post_meta( $id, '_order_tax', true ),
+				'total'              => get_post_meta( $id, '_order_total', true ),
+				'version'            => get_post_meta( $id, '_order_version', true ),
+				'prices_include_tax' => metadata_exists( 'post', $id, '_prices_include_tax' ) ? 'yes' === get_post_meta( $id, '_prices_include_tax', true ) : 'yes' === get_option( 'woocommerce_prices_include_tax' ),
 			)
 		);
 
@@ -446,7 +439,7 @@ abstract class Abstract_WC_Order_Data_Store_CPT extends WC_Data_Store_WP impleme
 		foreach ( $order->get_extra_data_keys() as $key ) {
 			$function = 'set_' . $key;
 			if ( is_callable( array( $order, $function ) ) ) {
-				$order->{$function}( $meta_data[ '_' . $key ][0] ?? '' );
+				$order->{$function}( get_post_meta( $order->get_id(), '_' . $key, true ) );
 			}
 		}
 	}
@@ -509,10 +502,6 @@ abstract class Abstract_WC_Order_Data_Store_CPT extends WC_Data_Store_WP impleme
 		clean_post_cache( $order->get_id() );
 		wc_delete_shop_order_transients( $order );
 		wp_cache_delete( 'order-items-' . $order->get_id(), 'orders' );
-		if ( OrderUtil::orders_cache_usage_is_enabled() ) {
-			$order_cache = wc_get_container()->get( OrderCache::class );
-			$order_cache->remove( $order->get_id() );
-		}
 	}
 
 	/**
@@ -814,31 +803,5 @@ abstract class Abstract_WC_Order_Data_Store_CPT extends WC_Data_Store_WP impleme
 		}
 
 		$this->update_post_meta( $order );
-	}
-
-	/**
-	 * Get the total shipping tax refunded.
-	 *
-	 * @param  WC_Order $order Order object.
-	 *
-	 * @since 10.2.0
-	 * @return float
-	 */
-	public function get_total_shipping_tax_refunded( $order ) {
-		global $wpdb;
-
-		$total = $wpdb->get_var(
-			$wpdb->prepare(
-				"SELECT SUM( order_itemmeta.meta_value )
-				FROM {$wpdb->prefix}woocommerce_order_itemmeta AS order_itemmeta
-				INNER JOIN $wpdb->posts AS posts ON ( posts.post_type = 'shop_order_refund' AND posts.post_parent = %d )
-				INNER JOIN {$wpdb->prefix}woocommerce_order_items AS order_items ON ( order_items.order_id = posts.ID AND order_items.order_item_type = 'tax' )
-				WHERE order_itemmeta.order_item_id = order_items.order_item_id
-				AND order_itemmeta.meta_key = 'shipping_tax_amount'",
-				$order->get_id()
-			)
-		) ?? 0;
-
-		return abs( $total );
 	}
 }

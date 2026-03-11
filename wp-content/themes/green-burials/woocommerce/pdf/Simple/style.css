@@ -1,0 +1,312 @@
+/* ================================================================
+   Green Burials – PDF Invoice
+   Matches reference image: clean table-based layout, gray headers,
+   cursive phone, indented product options, right-aligned totals.
+   ================================================================ */
+
+@page {
+	margin-top: 1.5cm;
+	margin-bottom: 3cm;
+	margin-left: 2cm;
+	margin-right: 2cm;
+	footer: docFooter;
+}
+
+body {
+	background: #fff;
+	color: #1a1a1a;
+	margin: 0;
+	font-family: Arial, Helvetica, 'DejaVu Sans', sans-serif;
+	font-size: 10pt;
+	line-height: 1.45;
+}
+
+h1, h2, h3, h4 { font-weight: bold; margin: 0; padding: 0; }
+p { margin: 0; padding: 0; }
+a { text-decoration: none; color: #1a1a1a; }
+
+/* ================================================================
+   BASE TABLE RESET
+   ================================================================ */
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+	border: 0;
+	margin: 0;
+	padding: 0;
+}
+th, td { vertical-align: top; text-align: left; }
+
+/* ================================================================
+   DECORATIVE MARK (small angled gold element, top-left)
+   mPDF does not support transform:rotate, so we use a
+   right-border trick on a tiny box to suggest a diagonal stroke.
+   ================================================================ */
+div.gb-deco-mark {
+	width: 18pt;
+	font-size: 0;        /* hide the character; pure CSS block */
+	height: 4pt;
+	border-bottom: 3pt solid #c49a2a;
+	margin-bottom: 4mm;
+	margin-left: 1mm;
+}
+
+/* ================================================================
+   INVOICE TITLE  –  "Invoice #128"
+   ================================================================ */
+h1.gb-invoice-title {
+	font-size: 22pt;
+	font-weight: bold;
+	color: #1a1a1a;
+	margin: 0 0 6mm 0;
+	padding: 0;
+	line-height: 1.1;
+}
+
+/* ================================================================
+   SHARED TABLE BASE  (.gb-tbl)
+   ================================================================ */
+table.gb-tbl {
+	width: 100%;
+	border: 1px solid #cccccc;
+	border-collapse: collapse;
+	margin-bottom: 6mm;
+}
+
+table.gb-tbl th,
+table.gb-tbl td {
+	border: 1px solid #cccccc;
+	padding: 5pt 7pt;
+	font-size: 10pt;
+	vertical-align: top;
+}
+
+/* ================================================================
+   ORDER DETAILS TABLE
+   Header row spans both columns ("Order Details")
+   ================================================================ */
+th.gb-section-hdr {
+	font-size: 10pt;
+	font-weight: bold;
+	background-color: #f2f2f2;
+	border-bottom: 1px solid #cccccc;
+	padding: 5pt 7pt;
+	text-align: left;
+}
+
+td.gb-store-cell {
+	width: 50%;
+	font-size: 10pt;
+	line-height: 1.55;
+	vertical-align: top;
+	border-right: 1px solid #cccccc;
+}
+
+strong.gb-store-name {
+	font-size: 10.5pt;
+	font-weight: bold;
+}
+
+td.gb-meta-cell {
+	width: 50%;
+	font-size: 10pt;
+	line-height: 1.7;
+	vertical-align: top;
+}
+
+/* ================================================================
+   ADDRESSES TABLE
+   Two equal columns; each has a gray heading div + address text.
+   ================================================================ */
+table.gb-addr-tbl td.gb-addr-col {
+	width: 50%;
+	padding: 0;
+	vertical-align: top;
+}
+
+div.gb-addr-hdr {
+	font-size: 10pt;
+	font-weight: bold;
+	background-color: #f2f2f2;
+	padding: 5pt 7pt;
+	border-bottom: 1px solid #cccccc;
+}
+
+div.gb-addr-body {
+	font-size: 10pt;
+	line-height: 1.55;
+	padding: 5pt 7pt;
+}
+
+/* Phone in cursive / handwriting style (matches reference image) */
+div.gb-phone-cursive {
+	font-style: italic;
+	font-family: Georgia, 'DejaVu Serif', serif;
+	font-size: 13pt;
+	color: #1a1a1a;
+	padding: 3pt 7pt 5pt;
+	letter-spacing: 0.5pt;
+}
+
+/* ================================================================
+   LINE ITEMS TABLE
+   Columns: Product (wide) | Model | Quantity | Unit Price | Total
+   ================================================================ */
+table.gb-items-tbl {
+	page-break-before: avoid;
+}
+
+th.gb-th {
+	font-size: 10pt;
+	font-weight: bold;
+	background-color: #f2f2f2;
+	text-align: left;
+	padding: 5pt 7pt;
+}
+
+th.gb-th-qty,
+th.gb-th-price,
+th.gb-th-total {
+	text-align: right;
+}
+
+td.gb-td {
+	font-size: 10pt;
+	padding: 5pt 7pt;
+	vertical-align: top;
+}
+
+th.gb-th-product,
+td.gb-td-product { width: 38%; }
+
+th.gb-th-model,
+td.gb-td-model   { width: 16%; font-size: 10pt; }
+
+th.gb-th-qty,
+td.gb-td-qty     { width: 12%; text-align: right; }
+
+th.gb-th-price,
+td.gb-td-price   { width: 17%; text-align: right; }
+
+th.gb-th-total,
+td.gb-td-total   { width: 17%; text-align: right; }
+
+/* "- Option: Value" lines below product name */
+div.gb-opt-line {
+	font-size: 9.5pt;
+	color: #333;
+	line-height: 1.5;
+	padding-left: 3pt;
+}
+
+/* Fallback: plugin-rendered meta HTML */
+div.gb-item-meta {
+	font-size: 9.5pt;
+	color: #333;
+	margin-top: 2pt;
+	line-height: 1.5;
+}
+
+.wc-item-meta { margin: 2pt 0 0 0; }
+.wc-item-meta dl,
+.wc-item-meta li { font-size: 9.5pt; color: #333; margin: 0; padding: 0; line-height: 1.5; }
+.wc-item-meta dt { display: inline; font-weight: normal; }
+.wc-item-meta dd { display: inline; margin: 0; }
+
+/* ================================================================
+   TOTALS TABLE
+   Full width; left spacer cell pushes labels/values right.
+   ================================================================ */
+table.gb-totals-tbl {
+	margin-top: 0;
+	border-top: 0;
+}
+
+table.gb-totals-tbl td,
+table.gb-totals-tbl th {
+	border-top: 1px solid #cccccc;
+	border-left: none;
+	border-right: none;
+	border-bottom: none;
+	padding: 4pt 7pt;
+	font-size: 10pt;
+}
+
+table.gb-totals-tbl tr:first-child td,
+table.gb-totals-tbl tr:first-child th {
+	border-top: 0;
+}
+
+td.gb-tot-spacer {
+	width: 56%;
+	border: none;
+}
+
+th.gb-tot-label {
+	width: 26%;
+	text-align: right;
+	font-weight: bold;
+	padding-right: 8pt;
+	border-left: 1px solid #cccccc;
+}
+
+td.gb-tot-value {
+	width: 18%;
+	text-align: right;
+}
+
+/* Grand total row */
+tr.order_total th.gb-tot-label,
+tr.order_total td.gb-tot-value {
+	border-top: 2px solid #cccccc;
+	font-weight: bold;
+}
+
+/* ================================================================
+   NOTES
+   ================================================================ */
+div.gb-notes {
+	font-size: 9.5pt;
+	color: #333;
+	border: 1px solid #cccccc;
+	padding: 4pt 7pt;
+	margin-bottom: 4mm;
+}
+
+/* ================================================================
+   SPACER & FOOTER
+   ================================================================ */
+div.gb-spacer { height: 8mm; }
+
+#footer {
+	position: absolute;
+	bottom: -2cm;
+	left: 0;
+	right: 0;
+	height: 2cm;
+	text-align: center;
+	font-size: 8pt;
+	color: #888;
+	border-top: 0.3mm solid #cccccc;
+	padding-top: 2mm;
+}
+
+.pagenum:before { content: counter(page); }
+.pagenum, .pagecount { font-family: sans-serif; }
+.rtl { direction: rtl; }
+
+/* ================================================================
+   PRODUCT BUNDLE COMPATIBILITY
+   ================================================================ */
+table.gb-items-tbl tr.bundled-item td.gb-td-product {
+	padding-left: 14pt;
+}
+
+table.gb-items-tbl tr.product-bundle td,
+table.gb-items-tbl tr.bundled-item td {
+	border-top: 0;
+}
+
+table.gb-items-tbl tr.bundled-item.hidden {
+	display: none;
+}

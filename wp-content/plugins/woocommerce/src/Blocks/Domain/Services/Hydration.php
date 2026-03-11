@@ -221,8 +221,8 @@ class Hydration {
 		if ( ! did_action( 'woocommerce_init' ) || null === WC()->session ) {
 			return;
 		}
-		$this->cached_store_notices = wc_get_notices();
-		wc_clear_notices();
+		$this->cached_store_notices = WC()->session->get( 'wc_notices', array() );
+		WC()->session->set( 'wc_notices', null );
 	}
 
 	/**
@@ -232,8 +232,7 @@ class Hydration {
 		if ( ! did_action( 'woocommerce_init' ) || null === WC()->session ) {
 			return;
 		}
-
-		wc_set_notices( $this->cached_store_notices );
+		WC()->session->set( 'wc_notices', $this->cached_store_notices );
 		$this->cached_store_notices = array();
 	}
 }

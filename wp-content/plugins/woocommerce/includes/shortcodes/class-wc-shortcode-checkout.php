@@ -10,7 +10,6 @@
 
 defined( 'ABSPATH' ) || exit;
 
-use Automattic\WooCommerce\Enums\OrderStatus;
 use Automattic\WooCommerce\Internal\Utilities\Users;
 
 /**
@@ -49,7 +48,7 @@ class WC_Shortcode_Checkout {
 			$order_id = absint( $_GET['order'] ); // WPCS: input var ok.
 			$order    = wc_get_order( $order_id );
 
-			if ( $order && $order->has_status( OrderStatus::PENDING ) ) {
+			if ( $order && $order->has_status( 'pending' ) ) {
 				$wp->query_vars['order-pay'] = absint( $_GET['order'] ); // WPCS: input var ok.
 			} else {
 				$wp->query_vars['order-received'] = absint( $_GET['order'] ); // WPCS: input var ok.
@@ -157,7 +156,7 @@ class WC_Shortcode_Checkout {
 								}
 
 								// We only need to check products managing stock, with a limited stock qty.
-								if ( ! $product->managing_stock() || $product->backorders_allowed() ) {
+								if ( ! $product->managing_stock() || $product->backorders_allowed()  ) {
 									continue;
 								}
 
@@ -195,8 +194,11 @@ class WC_Shortcode_Checkout {
 				);
 				WC()->customer->save();
 
-				$available_gateways = WC()->payment_gateways()->get_available_payment_gateways();
-				WC()->payment_gateways()->set_current_gateway( $available_gateways );
+				$available_gateways = WC()->payment_gateways->get_available_payment_gateways();
+
+				if ( count( $available_gateways ) ) {
+					current( $available_gateways )->set_current();
+				}
 
 				/**
 				 * Allows the text of the submit button on the Pay for Order page to be changed.

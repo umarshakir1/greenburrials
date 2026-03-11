@@ -19,7 +19,37 @@ class ProductRatingStars extends AbstractBlock {
 	 *
 	 * @var string
 	 */
-	protected $api_version = '3';
+	protected $api_version = '2';
+
+	/**
+	 * Get block supports. Shared with the frontend.
+	 * IMPORTANT: If you change anything here, make sure to update the JS file too.
+	 *
+	 * @return array
+	 */
+	protected function get_block_type_supports() {
+		return array(
+			'color'                  =>
+			array(
+				'text'                            => true,
+				'background'                      => false,
+				'link'                            => false,
+				'__experimentalSkipSerialization' => true,
+			),
+			'typography'             =>
+			array(
+				'fontSize'                        => true,
+				'__experimentalSkipSerialization' => true,
+			),
+			'spacing'                =>
+			array(
+				'margin'                          => true,
+				'padding'                         => true,
+				'__experimentalSkipSerialization' => true,
+			),
+			'__experimentalSelector' => '.wc-block-components-product-rating-stars',
+		);
+	}
 
 	/**
 	 * Overwrite parent method to prevent script registration.
@@ -119,29 +149,13 @@ class ProductRatingStars extends AbstractBlock {
 				10
 			);
 
-			$classes = implode(
-				' ',
-				array_filter(
-					array(
-						'wc-block-components-product-rating wc-block-grid__product-rating',
-						esc_attr( $text_align_styles_and_classes['class'] ?? '' ),
-						esc_attr( $styles_and_classes['classes'] ),
-					)
-				)
-			);
-
-			$wrapper_attributes = get_block_wrapper_attributes(
-				array(
-					'class' => $classes,
-					'style' => esc_attr( $styles_and_classes['styles'] ?? '' ),
-				)
-			);
-
 			return sprintf(
-				'<div %1$s>
-					%2$s
+				'<div class="wc-block-components-product-rating wc-block-grid__product-rating %1$s %2$s" style="%3$s">
+					%4$s
 				</div>',
-				$wrapper_attributes,
+				esc_attr( $text_align_styles_and_classes['class'] ?? '' ),
+				esc_attr( $styles_and_classes['classes'] ),
+				esc_attr( $styles_and_classes['styles'] ?? '' ),
 				$rating_html
 			);
 		}

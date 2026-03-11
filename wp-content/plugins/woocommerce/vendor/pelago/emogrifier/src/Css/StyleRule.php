@@ -12,7 +12,7 @@ use Sabberworm\CSS\RuleSet\DeclarationBlock;
  *
  * @internal
  */
-final class StyleRule
+class StyleRule
 {
     /**
      * @var DeclarationBlock
@@ -43,7 +43,7 @@ final class StyleRule
         $selectors = $this->declarationBlock->getSelectors();
         return \array_map(
             static function (Selector $selector): string {
-                return (string) $selector;
+                return (string)$selector;
             },
             $selectors
         );

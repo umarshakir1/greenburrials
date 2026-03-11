@@ -57,10 +57,7 @@
 			if(opts.content){
 				var org_title = opts.content;
 			} else {
-				var org_title = DOMPurify.sanitize( org_elem.attr(opts.attribute), {
-					ALLOWED_TAGS: [ 'a', 'b', 'em', 'i', 'strong', 'p', 'br', 'pre', 'span', 'img' ],
-					ALLOWED_ATTR: [ 'target', 'href', 'rel', 'name', 'download', 'title', 'src', 'alt', 'class', 'style' ],
-				} );
+				var org_title = org_elem.attr(opts.attribute);
 			}
 			if(org_title != ""){
 				if(!opts.content){

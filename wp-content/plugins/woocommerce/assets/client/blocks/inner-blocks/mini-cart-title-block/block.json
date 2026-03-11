@@ -17,9 +17,6 @@
 		},
 		"typography": {
 			"fontSize": true
-		},
-		"interactivity": {
-			"clientNavigation": true
 		}
 	},
 	"attributes": {
@@ -31,7 +28,9 @@
 			}
 		}
 	},
-	"parent": [ "woocommerce/filled-mini-cart-contents-block" ],
+	"parent": [
+		"woocommerce/filled-mini-cart-contents-block"
+	],
 	"textdomain": "woocommerce",
 	"apiVersion": 3,
 	"$schema": "https://schemas.wp.org/trunk/block.json"

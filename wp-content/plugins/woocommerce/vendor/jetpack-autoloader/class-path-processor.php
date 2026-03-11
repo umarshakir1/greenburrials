@@ -5,7 +5,7 @@
  * @package automattic/jetpack-autoloader
  */
 
-namespace Automattic\Jetpack\Autoloader\jpc433f2e0744104f73ad290380d910d2d\al5_0_0;
+namespace Automattic\Jetpack\Autoloader\jpe481b35f50815040071d81943b40b880;
 
  // phpcs:ignore
 
@@ -129,7 +129,7 @@ class Path_Processor {
 	 * @return bool True if the path is absolute, otherwise false.
 	 */
 	private function is_absolute_path( $path ) {
-		if ( empty( $path ) || 0 === strlen( $path ) || '.' === $path[0] ) {
+		if ( 0 === strlen( $path ) || '.' === $path[0] ) {
 			return false;
 		}
 
